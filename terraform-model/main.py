@@ -16,8 +16,8 @@ def mycommands():
     pass
 
 @click.command()
-@click.option('--decision', prompt = '\n-------------------------------------------------------------\nWelcome to the Terraform Application, what do you want to do?\n-------------------------------------------------------------\n\n 1. Create a new instance\n 2. Delete an instance\n 3. List all instances\n 4. Create new security group\n 5. Apply all changes\n 6. Exit \n\n', 
-type=click.Choice(['1', '2', '3', '4', '5', '6'], case_sensitive=False), help = 'The option you choose.')
+@click.option('--decision', prompt = '\n-------------------------------------------------------------\nWelcome to the Terraform Application, what do you want to do?\n-------------------------------------------------------------\n\n 1. Create a new instance\n 2. Delete an instance\n 3. List all instances\n 4. Create new security group\n 5. Apply all changes\n 6. Create user \n 7. Exit \n\n', 
+type=click.Choice(['1', '2', '3', '4', '5', '6','7'], case_sensitive=False), help = 'The option you choose.')
 
 def write_json(decision):
     global contador
@@ -27,13 +27,24 @@ def write_json(decision):
     if decision == "1":
         name = input("Enter the name of the instance: \n")
         type = input("Enter the instance type [t2.micro, t2.nano]: \n")
-        #security = input("Enter the security group name: \n")
+        # security = input("Enter the security group name: \n")
+        # if security == "":
+        #     security = "default"
         dict_variables["instance_variables"].update({'instance_' + str(contador): {'instance_name': name, 'instance_type': type}})
 
         json_object = json.dumps(dict_variables, indent = 4)
 
+        time.sleep(0.4)
+        print("Creating instance...\n")
+
+        for i in tqdm(range(10)):
+            time.sleep(0.2)
+
         with open('.auto.tfvars.json', 'w') as f:
             f.write(json_object)
+        
+        print("Instance created successfully!\n")
+        time.sleep(0.2)
         
         apply = input('\nDo you want to apply the changes right now? (y/n):  ')
         if apply == 'y':
@@ -72,7 +83,7 @@ def write_json(decision):
                 print("Deleting the instance with ID: " + instance_id + "\n")
 
                 for i in tqdm(range(10)):
-                    time.sleep(0.4)
+                    time.sleep(0.2)
 
                 with open('.auto.tfvars.json', 'w') as f:
                     f.write(json_object)
@@ -93,17 +104,21 @@ def write_json(decision):
     if decision == "3":
         print("\n-------------------------------------------------------------\n")
         print("List of instances not applied yet: \n")
-        for key in dict_variables["instance_variables"]:
-            print(key + "\n")
+
+        if dict_variables["instance_variables"] == {}:
+            print("No instances created yet. \n")
+        else:
+            for key in dict_variables["instance_variables"]:
+                print(key + "\n")
     
         print("-------------------------------------------------------------\n")
-        #pegar as instancias que ja deram apply
+        #pegar as instancias já na aws
         time.sleep(1.0)
         mycommands()
 
     # ---------------------------------- CREATE SECURITY GROUP ---------------------------------- #
     if decision == "4":
-        print("Those are the existing security groups: \n")
+        print("Existing security groups: \n")
         
         security = input("Enter the security group id: \n")
         dict_variables["instance_variables"].update({'instance_' + str(contador): {'security_group': security}})
@@ -119,9 +134,16 @@ def write_json(decision):
         os.system('terraform plan -var-file=secret.tfvars')
         #os.system('terraform apply -var-file=secret.tfvars')
         mycommands()
+
+    # ---------------------------------- CREATE USER ---------------------------------- #
+    if decision == "6":
+        print("Creating user...")
+        time.sleep(0.8)
+        #os.system('terraform apply -var-file=secret.tfvars')
+        mycommands()
     
     # ---------------------------------- EXIT ---------------------------------- #
-    if decision == "6":
+    if decision == "7":
         print("Exiting...")
         time.sleep(0.5)
         exit()
