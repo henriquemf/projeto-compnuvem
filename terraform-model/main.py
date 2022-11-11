@@ -8,8 +8,10 @@ contador = 0
 
 if os.stat(".auto.tfvars.json").st_size == 0:
     dict_variables = {"instance_variables" : {}}
+    dict_security_groups = {"security_group" : {}}
 else:
     dict_variables = json.load(open(".auto.tfvars.json"))
+    contador = len(dict_variables["instance_variables"])
 
 @click.group()
 def mycommands():
@@ -27,10 +29,23 @@ def write_json(decision):
     if decision == "1":
         name = input("Enter the name of the instance: \n")
         type = input("Enter the instance type [t2.micro, t2.nano]: \n")
-        # security = input("Enter the security group name: \n")
-        # if security == "":
-        #     security = "default"
-        dict_variables["instance_variables"].update({'instance_' + str(contador): {'instance_name': name, 'instance_type': type}})
+
+        security = input("Do you want to create a security group? (y/n) \n")
+        if security == "y":
+            security_name = input("Name of the security group: \n")
+            security_description = input("Description: \n")
+            security_ingress = input("Ingress description: \n")
+            security_from_port = input("From port: \n")
+            security_to_port = input("To port: \n")
+            security_protocol = input("Protocol: \n")
+            security_cidr_blocks = input("CIDR blocks: \n")
+
+            dict_security_groups = {"security_name" : security_name, "security_description" : security_description, "security_ingress" : security_ingress, "security_from_port" : security_from_port, "security_to_port" : security_to_port, "security_protocol" : security_protocol, "security_cidr_blocks" : [security_cidr_blocks]}
+            dict_variables["instance_variables"].update({'instance_' + str(contador) : {"instance_name" : name, "instance_type" : type, "security_group" : dict_security_groups}})
+
+        if security == "n":
+            dict_security_groups = {"security_name": "default", "description": "Allow inbound traffic", "ingress_description": "SSH", "from_port": 22, "to_port": 22, "protocol": "tcp", "cidr_blocks": ["20.0.0.0/16"]}
+            dict_variables["instance_variables"].update({'instance_' + str(contador): {'instance_name': name, 'instance_type': type, 'security_group': dict_security_groups}})
 
         json_object = json.dumps(dict_variables, indent = 4)
 

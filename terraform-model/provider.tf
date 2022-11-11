@@ -15,7 +15,7 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
-resource "aws_vpc" "tcb_blog_vpc" {
+resource "aws_vpc" "vpc_test" {
   cidr_block = "10.0.0.0/16"
   enable_dns_hostnames = true
 
@@ -24,8 +24,8 @@ resource "aws_vpc" "tcb_blog_vpc" {
   }
 }
 
-resource "aws_subnet" "tcb_blog_public_subnet" {
-  vpc_id     = aws_vpc.tcb_blog_vpc.id
+resource "aws_subnet" "vpc_test_subnet" {
+  vpc_id     = aws_vpc.vpc_test.id
   cidr_block = "10.0.1.0/24"
 
   tags = {
@@ -33,11 +33,26 @@ resource "aws_subnet" "tcb_blog_public_subnet" {
   }
 }
 
+resource "aws_security_group" "security_group" {
+  for_each = var.instance_variables
+  name        = each.value.security_group.security_name
+  description = each.value.security_group.security_description
+  vpc_id      = aws_vpc.vpc_test.id
+
+  ingress {
+    description = each.value.security_group.security_ingress
+    from_port   = each.value.security_group.security_from_port
+    to_port     = each.value.security_group.security_to_port
+    protocol    = each.value.security_group.security_protocol
+    cidr_blocks = each.value.security_group.security_cidr_blocks
+  }
+}
 
 resource "aws_instance" "app_server" {
   for_each = var.instance_variables
   ami           = var.ami
   instance_type = each.value.instance_type
+  vpc_security_group_ids = [aws_security_group.security_group[each.key].id]
 
   tags = {
     Name = "${each.value.instance_name}"

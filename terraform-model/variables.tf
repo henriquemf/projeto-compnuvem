@@ -9,12 +9,6 @@ variable "ami" {
   type        = string
 }
 
-variable "instance_type" {
-  description = "Instance type"
-  type        = string
-  default = "t2.nano"
-}
-
 variable "access_key" {
   description = "AWS access key"
   type        = string
@@ -39,16 +33,34 @@ variable "password" {
   sensitive = true
 }
 
-variable "instance_name" {
-  description = "Name"
-  type        = string
-  default = "padrao"
-}
-
 variable "instance_variables" {
   description = "Instance variables"
   type        = map(object({
     instance_name = string
     instance_type = string
+    security_group = object({
+      security_name = string
+      security_description = string
+      security_ingress = string
+      security_from_port = number
+      security_to_port = number
+      security_protocol = string
+      security_cidr_blocks = list(string)
+    })
   }))
+  default = {
+    "instance_variables" = {
+      instance_name = "padraozao"
+      instance_type = "t2.micro"
+      security_group = {
+        security_cidr_blocks = [ "0.0.0.0/24" ]
+        security_description = "nossa, que padraozinho"
+        security_from_port = 1
+        security_ingress = "ingress default"
+        security_name = "defaultzera"
+        security_protocol = "tcp"
+        security_to_port = 1
+      }
+    }
+  }
 }
