@@ -53,6 +53,7 @@ resource "aws_instance" "app_server" {
   ami           = var.ami
   instance_type = each.value.instance_type
   vpc_security_group_ids = [aws_security_group.security_group[each.key].id]
+  subnet_id     = aws_subnet.vpc_test_subnet.id
 
   tags = {
     Name = "${each.value.instance_name}"
