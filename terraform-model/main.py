@@ -24,8 +24,8 @@ def mycommands():
     pass
 
 @click.command()
-@click.option('--decision', prompt = '\n-------------------------------------------------------------\nWelcome to the Terraform Application, what do you want to do?\n-------------------------------------------------------------\n\n 1. Create a new instance\n 2. Delete an instance\n 3. List all instances\n 4. List security groups\n 5. Apply all changes\n 6. Create user \n 7. Exit \n\n', 
-type=click.Choice(['1', '2', '3', '4', '5', '6','7'], case_sensitive=False), help = 'The option you choose.')
+@click.option('--decision', prompt = '\033[1;32m\n-------------------------------------------------------------\nWelcome to the Terraform Application, what do you want to do?\n-------------------------------------------------------------\n\n 1. Create a new instance\n 2. Delete an instance\n 3. List all instances\n 4. List security groups\n 5. Apply all changes\n 6. Create user \n 7. Delete user \n 8. List all users \n 9. Exit \n\n', 
+type=click.Choice(['1', '2', '3', '4', '5', '6','7','8','9'], case_sensitive=False), help = 'The option you choose.')
 
 def write_json(decision):
     global contador
@@ -61,7 +61,7 @@ def write_json(decision):
         json_object = json.dumps(dict_variables, indent = 4)
 
         time.sleep(0.4)
-        print("Creating instance...\n")
+        print("Creating instance in the JSON file\n")
 
         for i in tqdm(range(10)):
             time.sleep(0.2)
@@ -89,7 +89,7 @@ def write_json(decision):
             print(key)
 
         time.sleep(0.8)
-        instance_id = input("Enter the instance ID to delete: \n")
+        instance_id = input("Enter the instance number to delete: \n")
 
         dict_key = "instance_" + str(instance_id)
         
@@ -102,18 +102,40 @@ def write_json(decision):
 
             if  dict_key in dict_variables["instance_variables"].keys():
 
-                delete = input('\nDo you want to delete the instance from AWS? (y/n): ')
+                for each in ec2re.instances.all():
+                    if each.tags[0]['Value'] == dict_variables["instance_variables"][dict_key]["instance_name"]:
+                        dict_variables["instance_variables"].pop(dict_key)
+                        json_object = json.dumps(dict_variables, indent = 4)
 
-                if delete == 'y':
+                        time.sleep(0.4)
+
+                        print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
+
+                        for i in tqdm(range(10)):
+                            time.sleep(0.2)
+
+                        with open('.auto.tfvars.json', 'w') as f:
+                            f.write(json_object)
+                        
+                        print("\nInstance deleted from the JSON successfully. \n")
+                        
+                        print("Deleting the instance from AWS...\n")
+                        os.system('terraform apply -var-file=secret.tfvars')
+                        
+                        print("Instance deleted from AWS successfully!")
+                        time.sleep(0.8)
+                        mycommands()
                     
-                    if ec2re.instances.all().tags[0]["Value"] == dict_variables["instance_variables"][dict_key]["instance_name"]:
-                        if ec2re.instances.all().state['Name'] != 'terminated':
+                    else:
+                        print("Instance not found in AWS, it could not exist or it was already deleted.")
+                        final_decision = input("Do you want to delete it from the JSON file? (y/n) \n")
+                        if final_decision == "y":
                             dict_variables["instance_variables"].pop(dict_key)
                             json_object = json.dumps(dict_variables, indent = 4)
 
                             time.sleep(0.4)
 
-                            print("Deleting the instance with ID: " + instance_id + "\n")
+                            print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
 
                             for i in tqdm(range(10)):
                                 time.sleep(0.2)
@@ -122,41 +144,16 @@ def write_json(decision):
                                 f.write(json_object)
                             
                             print("\nInstance deleted from the JSON successfully. \n")
-                            
-                            os.system('terraform apply -var-file=secret.tfvars')
-                            print("Instance deleted from AWS successfully!")
                             time.sleep(0.8)
                             mycommands()
                         else:
-                            print("Instance already deleted from AWS!")
-                            time.sleep(0.4)
+                            time.sleep(0.8)
                             mycommands()
-                    else:
-                        print("Instance not found in AWS!")
-                        time.sleep(0.4)
-                        mycommands()
-                elif delete == 'n':
-                    print("Deleting the instance with ID: " + instance_id + "\n")
 
-                    for i in tqdm(range(10)):
-                        time.sleep(0.2)
-
-                    with open('.auto.tfvars.json', 'w') as f:
-                        f.write(json_object)
-                    
-                    print("\nInstance deleted from the JSON successfully. \n")
-
-                    mycommands()
-            
             else:
-                if ec2re.instances.all().state['Name'] == 'terminated' and dict_variables["instance_variables"][dict_key]["instance_name"]:
-                    print("Instances already deleted from AWS!")
-                    time.sleep(0.4)
-                    mycommands()
-                else:
-                    print("Instance not found in AWS!")
-                    time.sleep(0.4)
-                    mycommands()
+                print("Instance not found in the JSON file!")
+                time.sleep(0.4)
+                mycommands()
 
         mycommands()
 
@@ -178,7 +175,7 @@ def write_json(decision):
 
         for each in ec2re.instances.all():
             print("ID: " + each.id + " " + "| Name: " + each.tags[0]["Value"] + " " + "| State: " + each.state["Name"] + " " +
-            "| Type: " + each.instance_type + "\n")
+            "| Type: " + each.instance_type +  "| Region: "+  each.placement['AvailabilityZone'] + "\n")
 
         print("-------------------------------------------------------------\n")
         time.sleep(0.8)
@@ -191,11 +188,30 @@ def write_json(decision):
             print(dict_variables["instance_variables"][key]["security_group"]["security_name"])
         print("\n")
 
+        
         print("Existing security groups in AWS: \n")
         time.sleep(0.4)
-        response_sec = ec2client.describe_security_groups()
-        for i in response_sec.get('SecurityGroups'):
-            print(i.get('GroupName'))
+
+        for each in ec2re.security_groups.all():
+            print("| Name: " + each.group_name + "\n")
+         
+        sg = input("Enter the security group name to list the rules: \n")
+
+        if sg == "":
+            print("Returning to main menu...")
+            time.sleep(0.8)
+            mycommands()
+        else:
+            for each in ec2re.security_groups.all():
+                if each.group_name == sg:
+                    print("ID: " + each.id + " " + "| Name: " + each.group_name + "\n")
+                    for rule in each.ip_permissions:
+                        print("Rule: " + str(rule) + "\n")
+                else:
+                    print("\nSecurity group not found in AWS!")
+                    time.sleep(0.4)
+                    mycommands()
+
         time.sleep(0.8)
         print("\n")
         mycommands()
@@ -215,9 +231,23 @@ def write_json(decision):
         time.sleep(0.8)
         #os.system('terraform apply -var-file=secret.tfvars')
         mycommands()
+
+    # ---------------------------------- DELETE USER ---------------------------------- #
     
-    # ---------------------------------- EXIT ---------------------------------- #
     if decision == "7":
+        print("Deleting user...")
+        time.sleep(0.8)
+        #os.system('terraform
+        mycommands()
+    
+    # ---------------------------------- LIST ALL USERS ---------------------------------- #
+    if decision == "8":
+        print("Listing all users...")
+        time.sleep(0.8)
+        #os.system('terraform
+
+    # ---------------------------------- EXIT ---------------------------------- #
+    if decision == "9":
         print("Exiting...")
         time.sleep(0.5)
         exit()
