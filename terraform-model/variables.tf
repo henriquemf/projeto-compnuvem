@@ -7,6 +7,7 @@ variable "aws-region" {
 variable "ami" {
   description = "AMI ID"
   type        = string
+  default = "ami-0ee23bfc74a881de5"
 }
 
 variable "access_key" {
@@ -53,6 +54,7 @@ variable "instance_variables" {
       instance_name = "padraozao"
       instance_type = "t2.micro"
       security_group = {
+        usable_var = true
         security_cidr_blocks = [ "0.0.0.0/24" ]
         security_description = "nossa, que padraozinho"
         security_from_port = 1

@@ -34,7 +34,7 @@ resource "aws_subnet" "vpc_test_subnet" {
 }
 
 resource "aws_security_group" "security_group" {
-  for_each = var.instance_variables
+  for_each    = var.instance_variables
   name        = each.value.security_group.security_name
   description = each.value.security_group.security_description
   vpc_id      = aws_vpc.vpc_test.id
@@ -49,7 +49,7 @@ resource "aws_security_group" "security_group" {
 }
 
 resource "aws_instance" "app_server" {
-  for_each = var.instance_variables
+  for_each      = var.instance_variables
   ami           = var.ami
   instance_type = each.value.instance_type
   vpc_security_group_ids = [aws_security_group.security_group[each.key].id]
@@ -59,3 +59,5 @@ resource "aws_instance" "app_server" {
     Name = "${each.value.instance_name}"
   }
 }
+
+

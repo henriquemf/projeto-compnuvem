@@ -11,7 +11,7 @@ ec2client = session.client('ec2')
 ec2re = session.resource('ec2')
 
 
-if os.stat(".auto.tfvars.json").st_size == 0:
+if os.stat(".auto.tfvars.json").st_size == 0 or os.stat(".auto.tfvars.json").st_size == 34:
     dict_variables = {"instance_variables" : {}}
     dict_security_groups = {"security_group" : {}}
     contador = 0
@@ -33,15 +33,41 @@ def write_json(decision):
     # ---------------------------------- CREATE INSTANCE ---------------------------------- #
     if decision == "1":
         contador += 1
+        print("Avaiable regions to use: \n\n  1 - us-east-1 \n  2 - us-east-2 \n")
+        region = input("Enter the region you want to create your instance: \n")
         name = input("Enter the name of the instance: \n")
         type = input("Enter the instance type [t2.micro, t2.nano]: \n")
         if type != "t2.micro" and type != "t2.nano":
             print("Invalid instance type, please try again")
             mycommands()
+        
+        if region == "1":
+            region = 'us-east-1'
+        elif region == "2":
+            region = 'us-east-2'
+        else:
+            print("Invalid region, please try again")
+            mycommands()
 
         security = input("Do you want to create a security group? (y/n) \n")
         if security == "y":
             security_name = input("Name of the security group: \n")
+
+            if security_name == "standard" or security_name == "default":
+                print("Invalid name, please try again\n")
+                mycommands()
+
+            security_groups = ec2re.security_groups.all()
+            for security_group in security_groups:
+                if security_group.group_name == security_name:
+                    print("Security group already exists, please try again")
+                    mycommands()
+            
+            for key in range(1, len(dict_variables["instance_variables"])):
+                if dict_variables["instance_variables"]["instance_" + str(key)]["security_group"]["security_name"] == security_name:
+                    print("Security group already exists, please try again")
+                    mycommands()
+
             security_description = input("Description: \n")
             security_ingress = input("Ingress description: \n")
             security_from_port = input("From port: \n")
@@ -50,13 +76,14 @@ def write_json(decision):
             security_cidr_blocks = input("CIDR blocks: \n")
 
             dict_security_groups = {"security_name" : security_name, "security_description" : security_description, "security_ingress" : security_ingress, "security_from_port" : security_from_port, "security_to_port" : security_to_port, "security_protocol" : security_protocol, "security_cidr_blocks" : [security_cidr_blocks]}
-            dict_variables["instance_variables"].update({'instance_' + str(contador) : {"instance_name" : name, "instance_type" : type, "security_group" : dict_security_groups}})
+            dict_variables["instance_variables"].update({'instance_' + str(contador) : {"instance_name" : name, "instance_type" : type, "aws-region": region, "security_group" : dict_security_groups}})
 
         if security == "n":
             print("Applying default security group\n")
             time.sleep(0.5)
+            
             dict_security_groups = {"security_name": "standard", "security_description": "Allow inbound traffic", "security_ingress": "SSH", "security_from_port": 22, "security_to_port": 22, "security_protocol": "tcp", "security_cidr_blocks": ["20.0.0.0/16"]}
-            dict_variables["instance_variables"].update({'instance_' + str(contador): {'instance_name': name, 'instance_type': type, 'security_group': dict_security_groups}})
+            dict_variables["instance_variables"].update({'instance_' + str(contador): {'instance_name': name, 'instance_type': type, "aws-region": region, 'security_group': dict_security_groups}})
 
         json_object = json.dumps(dict_variables, indent = 4)
 
@@ -97,63 +124,61 @@ def write_json(decision):
             print("No instance ID entered. Please try again.")
             time.sleep(0.8)
             mycommands()
+        
+        elif dict_key not in dict_variables["instance_variables"]:
+            print("Invalid instance ID. Please try again.\n")
+            time.sleep(0.8)
+            mycommands()
 
-        else:
+        for each in ec2re.instances.all():
+            print("ID: " + each.id + " " + "| Name: " + each.tags[0]["Value"] + " " + "| State: " + each.state["Name"] + " " +
+            "| Type: " + each.instance_type +  "| Region: "+  each.placement['AvailabilityZone'] + "\n")
+            if each.tags[0]['Value'] == dict_variables["instance_variables"][dict_key]["instance_name"]:
+                dict_variables["instance_variables"].pop(dict_key)
+                json_object = json.dumps(dict_variables, indent = 4)
 
-            if  dict_key in dict_variables["instance_variables"].keys():
-
-                for each in ec2re.instances.all():
-                    if each.tags[0]['Value'] == dict_variables["instance_variables"][dict_key]["instance_name"]:
-                        dict_variables["instance_variables"].pop(dict_key)
-                        json_object = json.dumps(dict_variables, indent = 4)
-
-                        time.sleep(0.4)
-
-                        print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
-
-                        for i in tqdm(range(10)):
-                            time.sleep(0.2)
-
-                        with open('.auto.tfvars.json', 'w') as f:
-                            f.write(json_object)
-                        
-                        print("\nInstance deleted from the JSON successfully. \n")
-                        
-                        print("Deleting the instance from AWS...\n")
-                        os.system('terraform apply -var-file=secret.tfvars')
-                        
-                        print("Instance deleted from AWS successfully!")
-                        time.sleep(0.8)
-                        mycommands()
-                    
-                    else:
-                        print("Instance not found in AWS, it could not exist or it was already deleted.")
-                        final_decision = input("Do you want to delete it from the JSON file? (y/n) \n")
-                        if final_decision == "y":
-                            dict_variables["instance_variables"].pop(dict_key)
-                            json_object = json.dumps(dict_variables, indent = 4)
-
-                            time.sleep(0.4)
-
-                            print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
-
-                            for i in tqdm(range(10)):
-                                time.sleep(0.2)
-
-                            with open('.auto.tfvars.json', 'w') as f:
-                                f.write(json_object)
-                            
-                            print("\nInstance deleted from the JSON successfully. \n")
-                            time.sleep(0.8)
-                            mycommands()
-                        else:
-                            time.sleep(0.8)
-                            mycommands()
-
-            else:
-                print("Instance not found in the JSON file!")
                 time.sleep(0.4)
+
+                print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
+
+                for i in tqdm(range(10)):
+                    time.sleep(0.2)
+
+                with open('.auto.tfvars.json', 'w') as f:
+                    f.write(json_object)
+                
+                print("\nInstance deleted from the JSON successfully. \n")
+                
+                print("Deleting the instance from AWS...\n")
+                os.system('terraform apply -var-file=secret.tfvars')
+                
+                print("Instance deleted from AWS successfully!")
+                time.sleep(0.8)
                 mycommands()
+            
+            else:
+                print("Instance not found in AWS, it could not exist or it was already deleted.\n")
+                final_decision = input("Do you want to delete it from the JSON file? (y/n) \n")
+                if final_decision == "y":
+                    dict_variables["instance_variables"].pop(dict_key)
+                    json_object = json.dumps(dict_variables, indent = 4)
+
+                    time.sleep(0.4)
+
+                    print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
+
+                    for i in tqdm(range(10)):
+                        time.sleep(0.2)
+
+                    with open('.auto.tfvars.json', 'w') as f:
+                        f.write(json_object)
+                    
+                    print("\nInstance deleted from the JSON successfully. \n")
+                    time.sleep(0.8)
+                    mycommands()
+                else:
+                    time.sleep(0.8)
+                    mycommands()
 
         mycommands()
 
@@ -227,8 +252,25 @@ def write_json(decision):
 
     # ---------------------------------- CREATE USER ---------------------------------- #
     if decision == "6":
-        print("Creating user...")
-        time.sleep(0.8)
+        
+        print('\n-------------------------------------------------------------\n')
+        username = input("Enter the username: \n")
+
+        if username == "":
+            print("No username entered. Please try again.")
+            time.sleep(0.8)
+            mycommands()
+        
+        else:
+            dict_variables["user_variables"] = {}
+            dict_variables["user_variables"].update({username: {}})
+            print("Creating user " + username + "...\n")
+            
+            print("User created successfully!")
+            time.sleep(0.8)
+            mycommands()
+
+
         #os.system('terraform apply -var-file=secret.tfvars')
         mycommands()
 
