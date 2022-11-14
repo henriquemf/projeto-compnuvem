@@ -34,35 +34,54 @@ variable "password" {
   sensitive = true
 }
 
-variable "instance_variables" {
-  description = "Instance variables"
+variable "security_groups" {
+  description = "Security groups"
+  type        = map(object({
+    security_name        = string
+    security_description = string
+    security_ingress     = string
+    security_from_port   = number
+    security_to_port     = number
+    security_protocol    = string
+    security_cidr_blocks = list(string)
+    instances_applied = map(object({
+      instance_name = string
+      instance_type = string
+    }))
+  }))
+  default = {
+    "sg1" = {
+      security_name        = "sg1"
+      security_description = "sg1"
+      security_ingress     = "sg1"
+      security_from_port   = 22
+      security_to_port     = 22
+      security_protocol    = "tcp"
+      security_cidr_blocks = ["10.0.0.0/16"]
+      instances_applied = {
+        "app1" = {
+          instance_name = "app1"
+          instance_type = "t2.micro"
+        }
+      }
+    }
+  }
+}
+
+variable "instances" {
+  description = "Instances"
   type        = map(object({
     instance_name = string
     instance_type = string
-    security_group = object({
-      security_name = string
-      security_description = string
-      security_ingress = string
-      security_from_port = number
-      security_to_port = number
-      security_protocol = string
-      security_cidr_blocks = list(string)
-    })
+    aws-region = string
+    security_name = string
   }))
   default = {
-    "instance_variables" = {
-      instance_name = "padraozao"
+    "instance1" = {
+      instance_name = "instance1"
       instance_type = "t2.micro"
-      security_group = {
-        usable_var = true
-        security_cidr_blocks = [ "0.0.0.0/24" ]
-        security_description = "nossa, que padraozinho"
-        security_from_port = 1
-        security_ingress = "ingress default"
-        security_name = "defaultzera"
-        security_protocol = "tcp"
-        security_to_port = 1
-      }
+      aws-region = "us-east-1"
+      security_name = "public_sg"
     }
   }
 }

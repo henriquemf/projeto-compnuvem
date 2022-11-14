@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.aws-region
+  region = var.aws-region
   access_key = var.access_key
   secret_key = var.secret_key
 }
@@ -34,25 +34,25 @@ resource "aws_subnet" "vpc_test_subnet" {
 }
 
 resource "aws_security_group" "security_group" {
-  for_each    = var.instance_variables
-  name        = each.value.security_group.security_name
-  description = each.value.security_group.security_description
+  for_each    = var.security_groups
+  name        = each.value.security_name
+  description = each.value.security_description
   vpc_id      = aws_vpc.vpc_test.id
 
   ingress {
-    description = each.value.security_group.security_ingress
-    from_port   = each.value.security_group.security_from_port
-    to_port     = each.value.security_group.security_to_port
-    protocol    = each.value.security_group.security_protocol
-    cidr_blocks = each.value.security_group.security_cidr_blocks
+    description = each.value.security_ingress
+    from_port   = each.value.security_from_port
+    to_port     = each.value.security_to_port
+    protocol    = each.value.security_protocol
+    cidr_blocks = each.value.security_cidr_blocks
   }
 }
 
 resource "aws_instance" "app_server" {
-  for_each      = var.instance_variables
+  for_each      = var.instances
   ami           = var.ami
   instance_type = each.value.instance_type
-  vpc_security_group_ids = [aws_security_group.security_group[each.key].id]
+  vpc_security_group_ids = [aws_security_group.security_group[each.value.security_name].id]
   subnet_id     = aws_subnet.vpc_test_subnet.id
 
   tags = {
