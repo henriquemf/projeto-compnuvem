@@ -85,3 +85,24 @@ variable "instances" {
     }
   }
 }
+
+variable "users" {
+  type = list(object({
+    username = string
+    restrictions = object ({
+      restriction_name = string
+      actions = list(string)
+      resources = list(string)
+    })
+  }))
+  default = [
+    {
+      username = "user1"
+      restrictions = {
+        restriction_name = "restriction1"
+        actions = ["*"]
+        resources = ["*"]
+      }
+    }
+  ]
+}

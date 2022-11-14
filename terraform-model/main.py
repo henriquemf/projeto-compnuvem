@@ -8,11 +8,11 @@ import boto3
 contador = 0
 session = boto3.Session(profile_name='default', region_name='us-east-1')
 ec2client = session.client('ec2')
+ec2iam = session.client('iam')
 ec2re = session.resource('ec2')
 
-
 if os.stat(".auto.tfvars.json").st_size == 0 or os.stat(".auto.tfvars.json").st_size == 53:
-    dict_variables = {"security_groups" : {}, "instances" : {}}
+    dict_variables = {"security_groups" : {}, "instances" : {}, "users" : []}
     contador = 0
 else:
     dict_variables = json.load(open(".auto.tfvars.json"))
@@ -362,37 +362,134 @@ def write_json(decision):
         print('\n-------------------------------------------------------------\n')
         username = input("Enter the username: \n")
 
-        if username == "":
+        while username == "":
             print("No username entered. Please try again.")
             time.sleep(0.8)
-            mycommands()
+            username = input("Enter the username: \n")
         
-        else:
-            dict_variables["user_variables"] = {}
-            dict_variables["user_variables"].update({username: {}})
-            print("Creating user " + username + "...\n")
+        print('\n-------------------------------------------------------------\n')
+        rules = input("Do you want to apply restrictions to this user? (y | n)\n")
+        if rules == "y":
+            list_actions = []
+            list_resources = []
+            restrictions = input("Enter the restriction name: \n")
+            while restrictions == "":
+                print("No restrictions entered. Please try again.\n")
+                time.sleep(0.5)
+                restrictions = input("Enter the restriction name: \n")
+            action = input("Enter actions you want to restrict separated by commas (e.g. ec2:DescribeInstances, ec2:DescribeRegions): \n")
+            resource = input("Enter resources you want to restrict separated by commas (e.g. arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0, arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef1): \n")
+            list_actions = action.split(",")
+            list_resources = resource.split(",")
+            dict_variables["users"].append({"username": username, "restrictions": {"restriction_name": restrictions, "actions": list_actions, "resources": list_resources}})
+            print('\n-------------------------------------------------------------\n')
             
-            print("User created successfully!")
-            time.sleep(0.8)
+        elif rules == "n": 
+            restrictions = "user_full_access"
+            action = "*"
+            resource = "*"
+            dict_variables["users"].append({"username": username, "restrictions": {"restriction_name": restrictions, "actions": [action], "resources": [resource]}})
+
+        else:
+            print("Invalid option. Please try again.")
+            time.sleep(0.5)
             mycommands()
 
+    
+        print("Creating user " + username + "...\n")
+        
+        json_object = json.dumps(dict_variables, indent = 4)
 
+        for i in tqdm(range(10)):
+            time.sleep(0.2)
+
+        with open('.auto.tfvars.json', 'w') as f:
+            f.write(json_object)
+        
         #os.system('terraform apply -var-file=secret.tfvars')
+
+        print("User created successfully!\n")
+        time.sleep(0.5)
         mycommands()
 
     # ---------------------------------- DELETE USER ---------------------------------- #
     
     if decision == "8":
-        print("Deleting user...")
-        time.sleep(0.8)
-        #os.system('terraform
-        mycommands()
+        print("Existing users in Terraform file: \n")
+        for key in dict_variables["users"]:
+            print(key["username"])
+        print('\n-------------------------------------------------------------\n')
+        print("Existing users in AWS: \n")
+        for user in ec2iam.list_users()['Users']:
+            print("User: {0}\nUserID: {1}\n\n".format(
+                user['UserName'],
+                user['UserId']
+                )
+            )
+        print('\n-------------------------------------------------------------\n')
+        user = input("Enter the user name to delete OR nothing to come back: \n")
+        if user == "":
+            print("Returning to main menu...")
+            time.sleep(0.8)
+            mycommands()
+        for key in list(dict_variables["users"]):
+            if key["username"] == user:
+                dict_variables["users"].remove(key)
+        json_object = json.dumps(dict_variables, indent = 4)
+
+        time.sleep(0.4)
+
+        print("Deleting the user from JSON file: " + user + "\n")
+
+        for i in tqdm(range(10)):
+            time.sleep(0.2)
+
+        with open('.auto.tfvars.json', 'w') as f:
+            f.write(json_object)
+
+        print("\nUser deleted from the JSON successfully. \n")
+
+        aws = input("Do you want to delete it from AWS? (y/n) \n")
+
+        if aws == "y":
+            print("Deleting the user from AWS...\n")
+            os.system('terraform apply -var-file=secret.tfvars')
+            print("User deleted from AWS successfully!\n")
+            time.sleep(0.8)
+            mycommands()
+
+        elif aws == "n":
+            print("Returning to main menu...")
+            time.sleep(0.8)
+            mycommands()
     
     # ---------------------------------- LIST ALL USERS ---------------------------------- #
     if decision == "9":
-        print("Listing all users...")
+        #list all users in AWS using boto3 ec2re and print them
+        print("Listing all users in AWS...\n")
+        time.sleep(0.5)
+        for user in ec2iam.list_users()['Users']:
+            print("User: {0}\nUserID: {1}\nARN: {2}\nCreated on: {3}\n".format(
+                user['UserName'],
+                user['UserId'],
+                user['Arn'],
+                user['CreateDate']
+                )
+            )
+        
+        print("Listing all users in Terraform file...\n")
+        time.sleep(0.5)
+
+        for user in dict_variables["users"]:
+            for key in user:
+                print("User: {0}\nRestrictions: {1}\n".format(
+                    user[key]["username"],
+                    user[key]["restrictions"]["restriction_name"]
+                    )
+                )
+
         time.sleep(0.8)
-        #os.system('terraform
+        mycommands()
 
     # ---------------------------------- EXIT ---------------------------------- #
     if decision == "10":

@@ -60,4 +60,13 @@ resource "aws_instance" "app_server" {
   }
 }
 
+module "user" {
+  source    = "./user"
+  users = var.users
+}
+
+output "user" {
+  value = module.user
+}
+
 
