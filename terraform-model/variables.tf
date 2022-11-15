@@ -36,36 +36,21 @@ variable "password" {
 
 variable "security_groups" {
   description = "Security groups"
-  type        = map(object({
-    security_name        = string
+  type = map(object({
+    security_name = string
     security_description = string
-    security_ingress     = string
-    security_from_port   = number
-    security_to_port     = number
-    security_protocol    = string
-    security_cidr_blocks = list(string)
-    instances_applied = map(object({
-      instance_name = string
-      instance_type = string
-    }))
+    security_ingress = list(map(object({
+      description = string
+      from_port = number
+      to_port = number
+      protocol = string
+      ipv6_cidr_blocks = list(string)
+      prefix_list_ids = list(string)
+      self = bool
+      security_groups = list(string)
+      cidr_blocks = list(string)
+    })))
   }))
-  default = {
-    "sg1" = {
-      security_name        = "sg1"
-      security_description = "sg1"
-      security_ingress     = "sg1"
-      security_from_port   = 22
-      security_to_port     = 22
-      security_protocol    = "tcp"
-      security_cidr_blocks = ["10.0.0.0/16"]
-      instances_applied = {
-        "app1" = {
-          instance_name = "app1"
-          instance_type = "t2.micro"
-        }
-      }
-    }
-  }
 }
 
 variable "instances" {

@@ -34,18 +34,12 @@ resource "aws_subnet" "vpc_test_subnet" {
 }
 
 resource "aws_security_group" "security_group" {
-  for_each    = var.security_groups
+  for_each = var.security_groups
   name        = each.value.security_name
   description = each.value.security_description
   vpc_id      = aws_vpc.vpc_test.id
 
-  ingress {
-    description = each.value.security_ingress
-    from_port   = each.value.security_from_port
-    to_port     = each.value.security_to_port
-    protocol    = each.value.security_protocol
-    cidr_blocks = each.value.security_cidr_blocks
-  }
+  ingress = [for rule in each.value.security_ingress : rule.rules]
 }
 
 resource "aws_instance" "app_server" {
@@ -53,7 +47,8 @@ resource "aws_instance" "app_server" {
   ami           = var.ami
   instance_type = each.value.instance_type
   vpc_security_group_ids = [aws_security_group.security_group[each.value.security_name].id]
-  subnet_id     = aws_subnet.vpc_test_subnet.id
+  subnet_id = aws_subnet.vpc_test_subnet.id
+  # availability_zone = each.value.aws-region
 
   tags = {
     Name = "${each.value.instance_name}"
