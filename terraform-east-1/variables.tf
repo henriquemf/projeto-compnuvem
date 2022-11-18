@@ -22,18 +22,6 @@ variable "secret_key" {
   sensitive = true
 }
 
-variable "username" {
-  description = "Username"
-  type        = string
-  sensitive = true
-}
-
-variable "password" {
-  description = "Password"
-  type        = string
-  sensitive = true
-}
-
 variable "security_groups" {
   description = "Security groups"
   type = map(object({
@@ -61,14 +49,6 @@ variable "instances" {
     aws-region = string
     security_name = string
   }))
-  default = {
-    "instance1" = {
-      instance_name = "instance1"
-      instance_type = "t2.micro"
-      aws-region = "us-east-1"
-      security_name = "public_sg"
-    }
-  }
 }
 
 variable "users" {

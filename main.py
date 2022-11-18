@@ -11,12 +11,12 @@ ec2client = session.client('ec2')
 ec2iam = session.client('iam')
 ec2re = session.resource('ec2')
 
-if os.stat(".auto.tfvars.json").st_size == 0 or os.stat(".auto.tfvars.json").st_size == 71:
-    dict_variables = {"security_groups" : {}, "instances" : {}, "users" : []}
-    contador = 0
-else:
-    dict_variables = json.load(open(".auto.tfvars.json"))
-    contador = len(dict_variables["security_groups"])
+path = input("\n-------------------------------------------------------------\nSELECT THE REGION\n-------------------------------------------------------------\n\n 1. us-east-1 (North Virginia)\n 2. us-east-2 (Ohio): \n")
+
+if path == "1":
+    os.chdir('terraform-east-1')
+elif path == "2":
+    os.chdir('terraform-east-2')
 
 @click.group()
 def mycommands():
@@ -28,6 +28,13 @@ type=click.Choice(['1', '2', '3', '4', '5', '6','7','8','9','10','11'], case_sen
 
 def program(decision):
     global contador
+
+    if os.stat(".auto.tfvars.json").st_size == 0 or os.stat(".auto.tfvars.json").st_size == 71:
+        dict_variables = {"security_groups" : {}, "instances" : {}, "users" : []}
+        contador = 0
+    else:
+        dict_variables = json.load(open(".auto.tfvars.json"))
+        contador = len(dict_variables["security_groups"])
 
     # ---------------------------------- CREATE INSTANCE ---------------------------------- #
     if decision == "1":
@@ -60,7 +67,7 @@ def program(decision):
             if security_name in dict_variables["security_groups"]:
                 print("Security group already exists, adding this new instance to it\n")
                 time.sleep(0.8)
-                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "aws-region" : region, "security_name" : security_name}})
+                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : security_name}})
 
                 time.sleep(0.4)
                 print("Creating instance in the JSON file\n")
@@ -86,28 +93,28 @@ def program(decision):
 
 
             if security_name not in dict_variables["security_groups"]:
-                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "aws-region" : region, "security_name" : security_name}})
+                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : security_name}})
                 dict_variables["security_groups"].update({security_name : {"security_name": security_name, 
                 "security_description" : security_description, "security_ingress" : [{"rules": {"description": security_ingress, 
                 "from_port" : security_from_port, "to_port" : security_to_port, "protocol" : security_protocol, 
-                "ipv6_cidr_blocks": None, "prefix_list_id": None, "self": None,"security_groups": None, 
+                "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
                 "cidr_blocks" : [security_cidr_blocks]}}]}})
             else:
-                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "aws-region" : region, "security_name" : security_name}})
+                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : security_name}})
 
         if security == "n":
             print("Applying default security group\n")
             time.sleep(0.5)
 
             if "standard" not in dict_variables["security_groups"]:
-                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "aws-region" : region, "security_name" : "standard"}})
+                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : "standard"}})
                 dict_variables["security_groups"].update({"standard" : {"security_name": "standard", 
                 "security_description" : "Allow 22", "security_ingress" : [{"rules": {"description": "Allow 22", 
                 "from_port" : "22", "to_port" : "22", "protocol" : "tcp", 
-                "ipv6_cidr_blocks": None, "prefix_list_id": None, "self": None,"security_groups": None, 
+                "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
                 "cidr_blocks" : ["0.0.0.0/16"]}}]}})
             else:
-                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "aws-region" : region, "security_name" : "standard"}})
+                dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : "standard"}})
 
         time.sleep(0.4)
         print("Creating instance in the JSON file\n")
@@ -201,7 +208,7 @@ def program(decision):
             print("No instances created yet. \n")
         else:
             for key in dict_variables["instances"]:
-                print("ID: " + key + "| Name: " + dict_variables["instances"][key]["instance_name"] + "| Type: " + dict_variables["instances"][key]["instance_type"] + "| Region: " + dict_variables["instances"][key]["aws-region"] + "\n")
+                print("ID: " + key + "| Name: " + dict_variables["instances"][key]["instance_name"] + "| Type: " + dict_variables["instances"][key]["instance_type"] + "\n")
     
         print("-------------------------------------------------------------\n")
         print("List of instances in AWS: \n")
@@ -251,7 +258,7 @@ def program(decision):
             new_security_cidr_blocks = input("Enter the CIDR blocks: \n") 
             dict_variables["security_groups"][sg_rule]["security_ingress"].append({"rules": {"description": new_security_ingress, 
                 "from_port" : new_security_from_port, "to_port" : new_security_to_port, "protocol" : new_security_protocol, 
-                "ipv6_cidr_blocks": None, "prefix_list_id": None, "self": None,"security_groups": None, 
+                "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
                 "cidr_blocks" : [new_security_cidr_blocks]}})
 
 
@@ -274,23 +281,26 @@ def program(decision):
         print("Existing security groups in AWS: \n")
         time.sleep(0.4)
         groups = []
+        sg_ids = []
 
         for each in ec2re.security_groups.all():
             groups.append(each.group_name)
+            sg_ids.append(each.id)
             print("ID: " + each.id + " " + "| Name: " + each.group_name + "\n")
          
-        sg = input("Enter the security group name to list the rules OR nothing to return to menu: \n")
+        sg = input("Security Group NAME or ID to list the rules \nEnter nothing to return to menu: \n")
 
         if sg == "":
             print("Returning to main menu...")
             time.sleep(0.8)
             mycommands()
         
-        if sg in groups:
+        if sg in groups or sg in sg_ids:
             print("Showing rules... \n")
             time.sleep(0.4)
             for rule in each.ip_permissions:
-                print("Rule: " + str(rule) + "\n")
+                print("From port: " + str(rule["FromPort"]) + " " + "| To port: " + str(rule["ToPort"]) + " " 
+                + "| Protocol: " + rule["IpProtocol"] + " " + "| CIDR blocks: " + str(rule["IpRanges"]) + "\n")
             print("-------------------------------------------------------------\n")
             time.sleep(0.8)
             mycommands()
@@ -324,39 +334,35 @@ def program(decision):
             mycommands()
         
         if sg in dict_variables["security_groups"]:
-            if sg in sgs:
-                dict_variables["security_groups"].pop(sg)
-                for key in list(dict_variables["instances"]):
-                    if dict_variables["instances"][key] == sg:
-                        dict_variables["instances"].pop(key)
+            dict_variables["security_groups"].pop(sg)
+            for key in list(dict_variables["instances"]):
+                if dict_variables["instances"][key]["security_name"] == sg:
+                    dict_variables["instances"].pop(key)
 
-                time.sleep(0.4)
+            time.sleep(0.4)
 
-                print("Deleting the security group from JSON file: " + sg + "\n")
-                write_json(dict_variables)
-                
-                print("\nSecurity group deleted from the JSON successfully. \n")
+            print("Deleting the security group from JSON file: " + sg + "\n")
+            write_json(dict_variables)
+            
+            print("\nSecurity group deleted from the JSON successfully. \n")
 
-                aws = input("Do you want to delete it from AWS? (y/n) \n")
-                
-                if aws == "y":
-                    print("Deleting the security group from AWS...\n")
-                    os.system('terraform apply -var-file=secret.tfvars')
-                    print("Security group deleted from AWS successfully!\n")
-                    time.sleep(0.8)
-                    mycommands()
-
-                elif aws == "n":
-                    print("Returning to main menu...")
-                    time.sleep(0.8)
-                    mycommands()
-
+            aws = input("Do you want to delete it from AWS? (y/n) \n")
+            
+            if aws == "y":
+                print("Deleting the security group from AWS...\n")
+                os.system('terraform apply -var-file=secret.tfvars')
+                print("Security group deleted from AWS successfully!\n")
                 time.sleep(0.8)
                 mycommands()
 
-            else:
-                print("Security group not found in AWS, it could not exist or it was already deleted.\n")
+            elif aws == "n":
+                print("Returning to main menu...")
+                time.sleep(0.8)
                 mycommands()
+
+            time.sleep(0.8)
+            mycommands()
+
         else:
             print("\nSecurity group not found in Terraform file!")
             time.sleep(0.4)
@@ -513,6 +519,7 @@ def program(decision):
         exit()
 
 def write_json(dict_variables):
+
     json_object = json.dumps(dict_variables, indent = 4)
 
     for i in tqdm(range(10)):
