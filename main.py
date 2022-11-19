@@ -6,30 +6,40 @@ from tqdm import tqdm
 import boto3
 
 contador = 0
-session = boto3.Session(profile_name='default', region_name='us-east-1')
-ec2client = session.client('ec2')
-ec2iam = session.client('iam')
-ec2re = session.resource('ec2')
 
-path = input("\n-------------------------------------------------------------\nSELECT THE REGION\n-------------------------------------------------------------\n\n 1. us-east-1 (North Virginia)\n 2. us-east-2 (Ohio): \n")
+os.system('cls')
+path = input("\033[1;32m\n" + "-"*80 + "\n" + " "*30 + "SELECT THE REGION" + " "*30 + "\n" + "-"*80 + "\033[0m" + "\n\n\033[1;32m1.\033[0m us-east-1 (North Virginia)\n\033[1;32m2.\033[0m us-east-2 (Ohio): \n\n")
+os.system("cls")
 
 if path == "1":
     os.chdir('terraform-east-1')
+    session = boto3.Session(profile_name='default', region_name='us-east-1')
 elif path == "2":
     os.chdir('terraform-east-2')
+    session = boto3.Session(profile_name='default', region_name='us-east-2')
+while path != "1" and path != "2":
+    print("\033[31mInvalid option, please try again\033[00m\n")
+    time.sleep(0.8)
+    os.system("cls")
+    path = input("\033[1;32m\n" + "-"*80 + "\n" + " "*30 + "SELECT THE REGION" + " "*30 + "\n" + "-"*80 + "\033[0m" + "\n\n\033[1;32m1.\033[0m us-east-1 (North Virginia)\n\033[1;32m2.\033[0m us-east-2 (Ohio): \n\n")
+    os.system("cls")
+
+ec2client = session.client('ec2')
+ec2iam = session.client('iam')
+ec2re = session.resource('ec2')
 
 @click.group()
 def mycommands():
     pass
 
 @click.command()
-@click.option('--decision', prompt = '\033[1;32m\n-------------------------------------------------------------\nWelcome to the Terraform Application, what do you want to do?\n-------------------------------------------------------------\n\n 1. Create a new instance\n 2. Delete an instance\n 3. List all instances\n 4. Add rules to Security Group \n 5. List security groups\n 6. Delete security group \n 7. Apply all changes\n 8. Create user \n 9. Delete user \n 10. List all users \n 11. Exit \n\n', 
+@click.option('--decision', prompt = "\033[1;32m\n" + "-"*80 + "\n" + " "*10 + "Welcome to the Terraform Application, what do you want to do?" + " "*10 + "\n" + "-"*80 + "\033[0m\n\n \033[1;32m1.\033[00m Create a new instance\n \033[1;32m2.\033[00m Delete an instance\n \033[1;32m3.\033[00m List all instances\n \033[1;32m4.\033[00m Add rules to Security Group \n \033[1;32m5.\033[00m List security groups\n \033[1;32m6.\033[00m Delete security group \n \033[1;32m7.\033[00m Apply all changes\n \033[1;32m8.\033[00m Create user \n \033[1;32m9.\033[00m Delete user \n \033[1;32m10.\033[00m List all users \n \033[1;32m11.\033[00m Exit \n\n", 
 type=click.Choice(['1', '2', '3', '4', '5', '6','7','8','9','10','11'], case_sensitive=False), help = 'The option you choose.')
 
 def program(decision):
     global contador
 
-    if os.stat(".auto.tfvars.json").st_size == 0 or os.stat(".auto.tfvars.json").st_size == 71:
+    if os.stat('.auto.tfvars.json').st_size == 0 or os.stat('.auto.tfvars.json').st_size == 71:
         dict_variables = {"security_groups" : {}, "instances" : {}, "users" : []}
         contador = 0
     else:
@@ -38,34 +48,33 @@ def program(decision):
 
     # ---------------------------------- CREATE INSTANCE ---------------------------------- #
     if decision == "1":
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "CREATING INSTANCE\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         contador += 1
         dict_instance_key = 'instance_' + str(contador)
-        print("Avaiable zones to use: \n")
-        a_zones = []
-        for zone in ec2client.describe_availability_zones()['AvailabilityZones']:
-            a_zones.append(zone['ZoneName'])
-            print(zone['ZoneName'])
-        region = input("Enter the region you want to create your instance: \n")
-        name = input("Enter the name of the instance: \n")
-        type = input("Enter the instance type [t2.micro, t2.nano]: \n")
-        if type != "t2.micro" and type != "t2.nano":
-            print("Invalid instance type, please try again")
-            mycommands()
-        
-        if region not in a_zones:
-            print("Invalid region, please try again")
-            mycommands()
+        name = input("Name of the instance: \n")
+        type = input("Instance type [t2.micro, t2.nano]: \n")
+        while type != "t2.micro" and type != "t2.nano":
+            print("\033[31mInvalid instance type, please try again\033[00m\n")
+            time.sleep(0.8)
+            type = input("Instance type [t2.micro, t2.nano]: \n")
         
         security = input("Do you want to create a security group? (y/n) \n")
         if security == "y":
+            os.system("cls")
+            print("\033[95m" + "-"*80 + "\033[0m")
+            print("\033[95m" + " "*30 + "CREATING SECURITY GROUP\033[0m" + " "*30)
+            print("\033[95m" + "-"*80 + "\033[0m")
             security_name = input("Name of the security group: \n")
 
-            if security_name == "standard" or security_name == "default":
-                print("Invalid name, please try again\n")
-                mycommands()
+            while security_name == "standard" or security_name == "default":
+                print("\033[31mInvalid name, please try again\033[00m\n")
+                security_name = input("Name of the security group: \n")
 
             if security_name in dict_variables["security_groups"]:
-                print("Security group already exists, adding this new instance to it\n")
+                print("Security group already exists, adding this new instance to it...\n")
                 time.sleep(0.8)
                 dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : security_name}})
 
@@ -77,11 +86,21 @@ def program(decision):
                 time.sleep(0.2)
                 
                 apply = input('\nDo you want to apply the changes right now? (y/n):  ')
+                os.system("cls")
                 if apply == 'y':
                     os.system('terraform init')
                     os.system('terraform plan -var-file=secret.tfvars')
                     os.system('terraform apply -var-file=secret.tfvars')
+                    print("Changes applied \033[1;32msuccessfully!\033[00m\n")
+                    time.sleep(0.2)
+                    print("Returning to the main menu...\n")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
                 else:
+                    print("Returning to the main menu...\n")
+                    time.sleep(0.8)
+                    os.system("cls")
                     mycommands()
 
             security_description = input("Description: \n")
@@ -91,6 +110,22 @@ def program(decision):
             security_protocol = input("Protocol: \n")
             security_cidr_blocks = input("CIDR blocks: \n")
 
+            egress_decision = input("Do you want to add egress rules? (y/n) \n")
+            os.system("cls")
+            if egress_decision == "y":
+                security_egress = input("Egress description: \n")
+                security_egress_from_port = input("From port: \n")
+                security_egress_to_port = input("To port: \n")
+                security_egress_protocol = input("Protocol: \n")
+                security_egress_cidr_blocks = input("CIDR blocks: \n")
+            
+            elif egress_decision == "n":
+                print("Adding default egress rules...\n")
+                security_egress = "Allow all outbound"
+                security_egress_from_port = "0"
+                security_egress_to_port = "0"
+                security_egress_protocol = "-1"
+                security_egress_cidr_blocks = "0.0.0.0/0"
 
             if security_name not in dict_variables["security_groups"]:
                 dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : security_name}})
@@ -98,7 +133,9 @@ def program(decision):
                 "security_description" : security_description, "security_ingress" : [{"rules": {"description": security_ingress, 
                 "from_port" : security_from_port, "to_port" : security_to_port, "protocol" : security_protocol, 
                 "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
-                "cidr_blocks" : [security_cidr_blocks]}}]}})
+                "cidr_blocks" : [security_cidr_blocks]}}], "security_egress" : [{"rules": {"description": security_egress, "from_port" : security_egress_from_port,
+                "to_port" : security_egress_to_port, "protocol" : security_egress_protocol, "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,
+                "security_groups": None, "cidr_blocks" : [security_egress_cidr_blocks]}}]}})
             else:
                 dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : security_name}})
 
@@ -112,16 +149,19 @@ def program(decision):
                 "security_description" : "Allow 22", "security_ingress" : [{"rules": {"description": "Allow 22", 
                 "from_port" : "22", "to_port" : "22", "protocol" : "tcp", 
                 "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
-                "cidr_blocks" : ["0.0.0.0/16"]}}]}})
+                "cidr_blocks" : ["0.0.0.0/16"]}}],"security_egress" : [{"rules": {"description": "Allow all outbound", "from_port" : "0",
+                "to_port" : "0", "protocol" : "-1", "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,
+                "security_groups": None, "cidr_blocks" : ["0.0.0.0/0"]}}]}})
             else:
                 dict_variables["instances"].update({dict_instance_key: {"instance_name" : name, "instance_type" : type, "security_name" : "standard"}})
 
         time.sleep(0.4)
+        os.system("cls")
         print("Creating instance in the JSON file\n")
 
         write_json(dict_variables)
         
-        print("Instance created successfully!\n")
+        print("\n\033[1;32mInstance created successfully!\033[00m\n")
         time.sleep(0.2)
         
         apply = input('\nDo you want to apply the changes right now? (y/n):  ')
@@ -129,19 +169,31 @@ def program(decision):
             os.system('terraform init')
             os.system('terraform plan -var-file=secret.tfvars')
             os.system('terraform apply -var-file=secret.tfvars')
+            print("\nInstances deployed in AWS\n")
+            time.sleep(0.2)
+            print("Returning to the main menu...\n")
+            time.sleep(0.8)
+            os.system("cls")
+            mycommands()
         else:
+            print("\nReturning to the main menu...\n")
+            time.sleep(0.8)
+            os.system("cls")
             mycommands()
     
     # ---------------------------------- DELETE INSTANCE ---------------------------------- #
     if decision == "2":
         
-        print('\n-------------------------------------------------------------\n')
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "DELETING INSTANCE\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print('List of instances: \n')
         for key in dict_variables["instances"]:
             print(key)
 
         time.sleep(0.8)
-        instance_id = input("Enter the instance number to delete: \n")
+        instance_id = input("Instance number to delete: \n")
 
         dict_key = "instance_" + str(instance_id)
 
@@ -150,15 +202,18 @@ def program(decision):
         for each in ec2re.instances.all():
             instances_aws.append(each.tags[0]["Value"])
         
-        if instance_id == "":
-            print("No instance ID entered. Please try again.")
+        while instance_id == "":
+            print("\033[31mNo instance ID entered. Please try again.\033[00m")
             time.sleep(0.8)
-            mycommands()
+            os.system("cls")
+            instance_id = input("Instance number to delete: \n")
+
         else:
             for key in dict_variables["instances"]:
                 if dict_key not in dict_variables["instances"]:
-                    print("Invalid instance ID. Please try again.\n")
+                    print("\033[31mInvalid instance ID. Please try again.\033[00m\n")
                     time.sleep(0.8)
+                    os.system("cls")
                     mycommands()
 
                 if dict_variables["instances"][dict_key]["instance_name"] in instances_aws:
@@ -170,17 +225,22 @@ def program(decision):
 
                     write_json(dict_variables)
                     
-                    print("\nInstance deleted from the JSON successfully. \n")
+                    print("\n\033[1;32mInstance deleted from the JSON successfully.\033[00m\n")
+                    os.system("cls")
                     
                     print("Deleting the instance from AWS...\n")
                     os.system('terraform apply -var-file=secret.tfvars')
                     
-                    print("Instance deleted from AWS successfully!")
+                    print("\033[1;32mInstance deleted from AWS successfully!\033[00m\n")
+                    time.sleep(0.2)
+                    print("Returning to the main menu...\n")
                     time.sleep(0.8)
+                    os.system("cls")
                     mycommands()
                 
                 else:
-                    print("Instance not found in AWS, it could not exist or it was already deleted.\n")
+                    os.system("cls")
+                    print("\033[93mInstance not found in AWS, it could not exist or it was already deleted.\033[00m\n")
                     final_decision = input("Do you want to delete it from the JSON file? (y/n) \n")
                     if final_decision == "y":
                         dict_variables["instances"].pop(dict_key)   
@@ -189,18 +249,27 @@ def program(decision):
                         print("Deleting the instance with ID from JSON file: " + instance_id + "\n")
                         write_json(dict_variables)
                         
-                        print("\nInstance deleted from the JSON successfully. \n")
+                        print("\n\033[1;32mInstance deleted from the JSON successfully.\033[00m\n")
+                        time.sleep(0.2)
+                        print("Returning to the main menu...\n")
                         time.sleep(0.8)
+                        os.system("cls")
                         mycommands()
                     else:
+                        time.sleep(0.2)
+                        print("Returning to the main menu...\n")
                         time.sleep(0.8)
+                        os.system("cls")
                         mycommands()
 
         mycommands()
 
     # ---------------------------------- LIST INSTANCES ---------------------------------- #
     if decision == "3":
-        print("\n-------------------------------------------------------------\n")
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "LISTING INSTANCES\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("List of instances in Terraform file: \n")
 
         time.sleep(0.8)
@@ -208,76 +277,139 @@ def program(decision):
             print("No instances created yet. \n")
         else:
             for key in dict_variables["instances"]:
-                print("ID: " + key + "| Name: " + dict_variables["instances"][key]["instance_name"] + "| Type: " + dict_variables["instances"][key]["instance_type"] + "\n")
+                print("\033[34mID:\033[00m " + key + "\033[34m| Name:\033[00m " + dict_variables["instances"][key]["instance_name"] + "\033[34m| Type:\033[00m " + dict_variables["instances"][key]["instance_type"] + "\n")
     
-        print("-------------------------------------------------------------\n")
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("List of instances in AWS: \n")
         time.sleep(0.4)
 
         for each in ec2re.instances.all():
-            print("ID: " + each.id + " " + "| Name: " + each.tags[0]["Value"] + " " + "| State: " + each.state["Name"] + " " +
-            "| Type: " + each.instance_type +  "| Region: "+  each.placement['AvailabilityZone'] + "\n")
+            print("\033[34mID:\033[00m " + each.id + " " + "\033[34m| Name:\033[00m " + each.tags[0]["Value"] + " " + "\033[34m| State:\033[00m " 
+            + each.state["Name"] + " " + "\033[34m| Type:\033[00m " + each.instance_type +  "\033[34m| Region:\033[00m " + 
+            each.placement['AvailabilityZone'] + "\n")
 
-        print("-------------------------------------------------------------\n")
-        time.sleep(0.8)
-        mycommands()
+        print("\033[95m" + "-"*80 + "\033[0m")
+        back = input("\nPress ENTER to return to main menu...")
+
+        while back != "":
+            print("\033[31mInvalid option. Please try again.\033[00m")
+            time.sleep(0.2)
+            back = input("\nPress ENTER to return to main menu...")
+
+        if back == "":
+            print("Returning to main menu...")
+            time.sleep(0.8)
+            os.system("cls")
+            mycommands()
     
     # ---------------------------------- ADD RULES TO SECURITY GROUP ---------------------------------- #
     if decision == "4":
-        print("\n-------------------------------------------------------------\n")
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*25 + "ADDING RULES TO SECURITY GROUP\033[0m" + " "*35)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("List of security groups in Terraform file: \n")
         time.sleep(0.8)
         if dict_variables["security_groups"] == {}:
             print("No security groups created yet. \n")
         else:
             for key in dict_variables["security_groups"]:
-                print("Nome: " + key)
+                print("\033[34mName:\033[00m " + key)
         
-        print("\n-------------------------------------------------------------\n")
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("List of security groups in AWS: \n")
         time.sleep(0.4)
 
         for each in ec2re.security_groups.all():
-            print("Name: " + each.group_name + "\n")
+            print("\033[34mName:\033[00m " + each.group_name + "\n")
         
-        print("-------------------------------------------------------------\n")
+        print("\033[95m" + "-"*80 + "\033[0m")
         sg_rule = input("Enter the security group name to add rules: \n")
         while sg_rule == "":
-            print("No security group name entered. Please try again.")
+            print("\033[31mNo security group name entered. Please try again.\033[00m")
+            time.sleep(0.5)
             sg_rule = input("Enter the security group name to add rules: \n")
         
         while sg_rule not in dict_variables["security_groups"]:
-            print("Invalid security group name. Please try again.")
+            print("\033[31mInvalid security group name. Please try again.\033[00m")
             sg_rule = input("Enter the security group name to add rules: \n")
     
         else:
-            new_security_ingress = input("Enter the ingress description: \n")
-            new_security_from_port = input("Enter the from port: \n")
-            new_security_to_port = input("Enter the to port: \n")
-            new_security_protocol = input("Enter the protocol: \n")
-            new_security_cidr_blocks = input("Enter the CIDR blocks: \n") 
-            dict_variables["security_groups"][sg_rule]["security_ingress"].append({"rules": {"description": new_security_ingress, 
-                "from_port" : new_security_from_port, "to_port" : new_security_to_port, "protocol" : new_security_protocol, 
-                "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
-                "cidr_blocks" : [new_security_cidr_blocks]}})
+            print("\033[95m" + "-"*80 + "\033[0m")
+            print("\033[95m" + " "*25 + "ADDING RULES TO SECURITY GROUP " + sg_rule +"\033[0m" + " "*25)
+            print("\033[95m" + "-"*80 + "\033[0m")
 
+            new_ingress = input("Do you want to add a new ingress rule? (y/n) \n")
+            while new_ingress != "y" and new_ingress != "n" or new_ingress == "":
+                print("\033[31mInvalid option. Please try again.\033[00m")
+                time.sleep(0.2)
+                os.system("cls")
+                new_ingress = input("Do you want to add a new ingress rule? (y/n) \n")
+
+            if new_ingress == "y":
+                new_security_ingress = input("Ingress description: \n")
+                new_security_from_port = input("From port: \n")
+                new_security_to_port = input("To port: \n")
+                new_security_protocol = input("Protocol: \n")
+                new_security_cidr_blocks = input("CIDR blocks: \n") 
+                dict_variables["security_groups"][sg_rule]["security_ingress"].append({"rules": {"description": new_security_ingress, 
+                    "from_port" : new_security_from_port, "to_port" : new_security_to_port, "protocol" : new_security_protocol, 
+                    "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
+                    "cidr_blocks" : [new_security_cidr_blocks]}})
+            
+            elif new_ingress == "n":
+                print("No ingress rules added. \n")
+                time.sleep(0.5)
+                os.system("cls")
+                pass
+
+            new_egress = input("Do you want to add egress rules? (y/n): \n")
+            while new_egress != "y" and new_egress != "n" or new_egress == "":
+                print("\033[31mInvalid option. Please try again.\033[00m")
+                time.sleep(0.2)
+                os.system("cls")
+                new_egress = input("Do you want to add egress rules? (y/n): \n")
+
+            if new_egress == "y":
+                new_security_egress = input("Egress description: \n")
+                new_security_from_port = input("From port: \n")
+                new_security_to_port = input("To port: \n")
+                new_security_protocol = input("Protocol: \n")
+                new_security_cidr_blocks = input("CIDR blocks: \n") 
+                dict_variables["security_groups"][sg_rule]["security_egress"].append({"rules": {"description": new_security_egress, 
+                    "from_port" : new_security_from_port, "to_port" : new_security_to_port, "protocol" : new_security_protocol, 
+                    "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
+                    "cidr_blocks" : [new_security_cidr_blocks]}})
+            
+            elif new_egress == "n":
+                print("No egress rules added. \n")
+                time.sleep(0.5)
+                os.system("cls")
+                pass
 
             time.sleep(0.4)
 
             print("Adding the new rule to the security group: " + sg_rule + "\n")
             write_json(dict_variables)
 
-            print("\nRule added to the security group successfully. \n")
+            print("\033[1;32mRules added successfully!\033[00m\n")
+            time.sleep(0.2)
+            print("Returning to the main menu...\n")
             time.sleep(0.8)
+            os.system("cls")
             mycommands()
 
     # ---------------------------------- LIST SECURITY GROUPS ---------------------------------- #
     if decision == "5":
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "LIST SECURITY GROUPS\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Existing security groups in Terraform file: \n")
         for key in dict_variables["security_groups"]:
-            print("Name: " + key)
-        print("-------------------------------------------------------------\n")
+            print("\033[34mName:\033[00m " + key)
 
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Existing security groups in AWS: \n")
         time.sleep(0.4)
         groups = []
@@ -286,38 +418,55 @@ def program(decision):
         for each in ec2re.security_groups.all():
             groups.append(each.group_name)
             sg_ids.append(each.id)
-            print("ID: " + each.id + " " + "| Name: " + each.group_name + "\n")
+            print("\033[34mID:\033[00m " + each.id + " " + "\033[34m| Name:\033[00m " + each.group_name + "\n")
          
-        sg = input("Security Group NAME or ID to list the rules \nEnter nothing to return to menu: \n")
+        sg = input("Security Group NAME or ID to list the rules" + "\033[33m OR \033[00m" + "press ENTER to come back: \n")
 
         if sg == "":
             print("Returning to main menu...")
             time.sleep(0.8)
+            os.system("cls")
             mycommands()
+
+        while sg not in groups or sg not in sg_ids:
+            print("\n\033[31mSecurity group not found in AWS!\033[00m")
+            time.sleep(0.2)
+            print("Please try again.\n")
+            os.system("cls")
+            sg = input("Security Group NAME or ID to list the rules \n\033[1;32mPress ENTER to return to menu:\033[00m \n")
         
         if sg in groups or sg in sg_ids:
+            print("\033[95m" + "-"*80 + "\033[0m")
+            print("\033[95m" + " "*30 + "LISTING SECURITY GROUP" + sg + "RULES\033[0m" + " "*30)
             print("Showing rules... \n")
             time.sleep(0.4)
             for rule in each.ip_permissions:
-                print("From port: " + str(rule["FromPort"]) + " " + "| To port: " + str(rule["ToPort"]) + " " 
-                + "| Protocol: " + rule["IpProtocol"] + " " + "| CIDR blocks: " + str(rule["IpRanges"]) + "\n")
-            print("-------------------------------------------------------------\n")
-            time.sleep(0.8)
-            mycommands()
-        else:
-            print("\nSecurity group not found in AWS!")
-            time.sleep(0.4)
-            mycommands()
+                print("\033[34mFrom port:\033[00m " + str(rule["FromPort"]) + " " + "\033[34m| To port:\033[00m " 
+                + str(rule["ToPort"]) + " " + "\033[34m| Protocol:\033[00m " + rule["IpProtocol"] + " " + 
+                "\033[34m| CIDR blocks:\033[00m " + str(rule["IpRanges"]) + "\n")
+            print("\033[95m" + "-"*80 + "\033[0m")
+            back = input("\nPress ENTER to return to main menu...")
 
-        time.sleep(0.8)
-        print("\n")
-        mycommands()
+            while back != "":
+                print("\033[31mInvalid option. Please try again.\033[00m")
+                time.sleep(0.2)
+                back = input("\nPress ENTER to return to main menu...")
+
+            if back == "":
+                print("Returning to main menu...")
+                time.sleep(0.8)
+                os.system("cls")
+                mycommands()
 
     # ---------------------------------- DELETE SECURITY GROUP ---------------------------------- #
     if decision == "6":
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "DELETE SECURITY GROUP\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Existing security groups in Terraform file: \n")
         for key in dict_variables["security_groups"]:
-            print(key)
+            print("\033[34mName:\033[00m " + key)
         print("\n")
 
         sgs = []
@@ -325,13 +474,21 @@ def program(decision):
         for each in ec2re.security_groups.all():
             sgs.append(each.group_name)
 
-        print("WARNING: All instances attached to the security group will be deleted. \n")
-        sg = input("Enter the security group name to delete OR nothing to come back: \n")
+        print("\033[31mWARNING: All instances attached to the security group will be deleted.\033[00m \n")
+        sg = input("Enter the security group name to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n")
 
         if sg == "":
             print("Returning to main menu...")
             time.sleep(0.8)
+            os.system("cls")
             mycommands()
+
+        while sg not in dict_variables["security_groups"]:
+            print("\n\033[31mSecurity group not found in the JSON!\033[00m")
+            time.sleep(0.2)
+            print("Please try again.\n")
+            os.system("cls")
+            sg = input("Enter the security group name to delete" + "\033[33mOR\033[00m" + "press ENTER to come back: \n")
         
         if sg in dict_variables["security_groups"]:
             dict_variables["security_groups"].pop(sg)
@@ -344,62 +501,108 @@ def program(decision):
             print("Deleting the security group from JSON file: " + sg + "\n")
             write_json(dict_variables)
             
-            print("\nSecurity group deleted from the JSON successfully. \n")
-
+            print("\n\033[1;32mSecurity group deleted from the JSON successfully.\033[00m \n")
+            time.sleep(0.2)
+            os.system("cls")
             aws = input("Do you want to delete it from AWS? (y/n) \n")
+
+            while aws not in ["y", "n"]:
+                print("\n\033[31mInvalid option!\033[00m")
+                time.sleep(0.2)
+                print("Please try again.\n")
+                os.system("cls")
+                aws = input("Do you want to delete it from AWS? (y/n) \n")
             
             if aws == "y":
-                print("Deleting the security group from AWS...\n")
+                if sg not in sgs:
+                    print("\n\033[31mSecurity group not found in AWS!\033[00m")
+                    time.sleep(0.2)
+                    print("Please try again.\n")
+                    os.system("cls")
+                    mycommands()
+                print("Deleting " + sg + " from AWS...\n")
                 os.system('terraform apply -var-file=secret.tfvars')
-                print("Security group deleted from AWS successfully!\n")
+                os.system("cls")
+                print("\n\033[1;32mSecurity group deleted from AWS successfully.\033[00m \n")
+                time.sleep(0.2)
+                print("Returning to main menu...\n")
                 time.sleep(0.8)
+                os.system("cls")
                 mycommands()
 
             elif aws == "n":
                 print("Returning to main menu...")
                 time.sleep(0.8)
+                os.system("cls")
                 mycommands()
-
-            time.sleep(0.8)
-            mycommands()
-
-        else:
-            print("\nSecurity group not found in Terraform file!")
-            time.sleep(0.4)
-            mycommands()
-
-        time.sleep(0.8)
-        print("\n")
-        mycommands()
 
     # ---------------------------------- APPLY CHANGES ---------------------------------- #
     if decision == "7":
+        os.system("cls")
         print("Applying all changes...")
         time.sleep(0.8)
-        os.system('terraform init')
-        os.system('terraform plan -var-file=secret.tfvars')
-        os.system('terraform apply -var-file=secret.tfvars')
-        mycommands()
+        
+        #check if .terraform.lock.hcl exists
+        if os.path.exists(".terraform.lock.hcl"):
+            os.system('terraform plan -var-file=secret.tfvars')
+            os.system('terraform apply -var-file=secret.tfvars')
+        else:
+            os.system('terraform init')
+            os.system('terraform plan -var-file=secret.tfvars')
+            os.system('terraform apply -var-file=secret.tfvars')
+
+        print("\n\033[1;32mChanges applied successfully.\033[00m \n")
+        time.sleep(0.2)
+        back = input("\nPress ENTER to return to main menu...")
+
+        while back != "":
+            print("\033[31mInvalid option. Please try again.\033[00m")
+            time.sleep(0.2)
+            back = input("\nPress ENTER to return to main menu...")
+
+        if back == "":
+            print("Returning to main menu...")
+            time.sleep(0.8)
+            os.system("cls")
+            mycommands()
 
     # ---------------------------------- CREATE USER ---------------------------------- #
     if decision == "8":
-        
-        print('\n-------------------------------------------------------------\n')
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "CREATE USER\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         username = input("Enter the username: \n")
 
         while username == "":
-            print("No username entered. Please try again.")
+            print("\n\033[31mUsername cannot be empty!\033[00m")
+            time.sleep(0.2)
+            print("Please try again.\n")
             time.sleep(0.8)
+            os.system("cls")
             username = input("Enter the username: \n")
         
-        print('\n-------------------------------------------------------------\n')
+        print("\033[95m" + "-"*80 + "\033[0m")
         rules = input("Do you want to apply restrictions to this user? (y | n)\n")
+
+        while rules not in ["y", "n"]:
+            print("\n\033[31mInvalid option!\033[00m")
+            time.sleep(0.2)
+            print("Please try again.\n")
+            time.sleep(0.8)
+            os.system("cls")
+            rules = input("Do you want to apply restrictions to this user? (y | n)\n")
+
         if rules == "y":
+            os.system("cls")
+            print("\033[95m" + "-"*80 + "\033[0m")
+            print("\033[95m" + " "*30 + "APPLYING RESTRICTIONS TO USER" + username + "\033[0m" + " "*30)
+            print("\033[95m" + "-"*80 + "\033[0m")
             list_actions = []
             list_resources = []
             restrictions = input("Enter the restriction name: \n")
             while restrictions == "":
-                print("No restrictions entered. Please try again.\n")
+                print("\n\033[31mRestriction name cannot be empty!\033[00m")
                 time.sleep(0.5)
                 restrictions = input("Enter the restriction name: \n")
             action = input("Enter actions you want to restrict separated by commas (e.g. ec2:DescribeInstances, ec2:DescribeRegions): \n")
@@ -407,90 +610,127 @@ def program(decision):
             list_actions = action.split(",")
             list_resources = resource.split(",")
             dict_variables["users"].append({"username": username, "restrictions": {"restriction_name": restrictions, "actions": list_actions, "resources": list_resources}})
-            print('\n-------------------------------------------------------------\n')
+            print("\033[95m" + "-"*80 + "\033[0m")
             
         elif rules == "n": 
+            print("Applyinng no restrictions to user " + username + "\n")
             restrictions = "user_full_access"
             action = "*"
             resource = "*"
             dict_variables["users"].append({"username": username, "restrictions": {"restriction_name": restrictions, "actions": [action], "resources": [resource]}})
-
-        else:
-            print("Invalid option. Please try again.")
-            time.sleep(0.5)
-            mycommands()
-
     
         print("Creating user " + username + "...\n")
         write_json(dict_variables)
 
         user_decision = input("Do you want to create the user in AWS? (y/n) \n")
 
+        while user_decision not in ["y", "n"]:
+            print("\n\033[31mInvalid option!\033[00m")
+            time.sleep(0.2)
+            print("Please try again.\n")
+            os.system("cls")
+            user_decision = input("Do you want to create the user in AWS? (y/n) \n")
+
         if user_decision == "y":
-            os.system('terraform apply -var-file=secret.tfvars')
-            print("User created successfully!\n")
-            time.sleep(0.5)
-            mycommands()
+            os.system('cls')
+            list_users = []
+            for user in ec2iam.list_users()['Users']:
+                list_users.append(user['UserName'])
+            if username not in list_users:
+                os.system('terraform apply -var-file=secret.tfvars')
+                print("\n\033[1;32mUser created successfully.\033[00m \n")
+                time.sleep(0.2)
+                back = input("\nPress ENTER to return to main menu...")
+
+                while back != "":
+                    print("\033[31mInvalid option. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    back = input("\nPress ENTER to return to main menu...")
+
+                if back == "":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
+            else:
+                print("\n\033[31mUser already exists in AWS!\033[00m \n")
+                time.sleep(0.8)
+                print("Returning to main menu...")
+                time.sleep(0.8)
+                os.system("cls")
+                mycommands()
+
         elif user_decision == "n":
             print("Returning to main menu...")
             time.sleep(0.8)
-            mycommands()
-        else:
-            print("Invalid option. Please try again.")
-            time.sleep(0.5)
+            os.system("cls")
             mycommands()
 
     # ---------------------------------- DELETE USER ---------------------------------- #
     
     if decision == "9":
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "DELETE USER\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Existing users in Terraform file: \n")
         for key in dict_variables["users"]:
             print(key["username"])
-        print('\n-------------------------------------------------------------\n')
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Existing users in AWS: \n")
         for user in ec2iam.list_users()['Users']:
-            print("User: {0}\nUserID: {1}\n\n".format(
+            print("\033[34mUser:\033[0m {0}\n\033[34mUserID:\033[0m {1}\n\n".format(
                 user['UserName'],
                 user['UserId']
                 )
             )
-        print('\n-------------------------------------------------------------\n')
-        user = input("Enter the user name to delete OR nothing to come back: \n")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        user = input("Enter the user to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n")
         if user == "":
             print("Returning to main menu...")
             time.sleep(0.8)
+            os.system("cls")
             mycommands()
         for key in list(dict_variables["users"]):
             if key["username"] == user:
                 dict_variables["users"].remove(key)
 
         time.sleep(0.4)
-        print("Deleting the user from JSON file: " + user + "\n")
+        print("Deleting user " + user + "from JSON file\n")
 
         write_json(dict_variables)
 
-        print("\nUser deleted from the JSON successfully. \n")
+        print("\n\033[1;32mUser deleted from the JSON successfully.\033[00m \n")
 
         aws = input("Do you want to delete it from AWS? (y/n) \n")
 
         if aws == "y":
+            os.system('cls')
             print("Deleting the user from AWS...\n")
             os.system('terraform apply -var-file=secret.tfvars')
-            print("User deleted from AWS successfully!\n")
+            print("\n\033[1;32mUser deleted from AWS successfully.\033[00m \n")
+            time.sleep(0.2)
+            print("Returning to main menu...\n")
             time.sleep(0.8)
+            os.system("cls")
             mycommands()
 
         elif aws == "n":
             print("Returning to main menu...")
             time.sleep(0.8)
+            os.system("cls")
             mycommands()
     
     # ---------------------------------- LIST ALL USERS ---------------------------------- #
     if decision == "10":
+        os.system("cls")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "LIST ALL USERS\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Listing all users in AWS...\n")
         time.sleep(0.5)
         for user in ec2iam.list_users()['Users']:
-            print("User: {0}\nUserID: {1}\nARN: {2}\nCreated on: {3}\n".format(
+            print("\033[34mUser:\033[00m {0}\n\033[34mUserID:\033[00m {1}\n\033[34mARN:\033[00m {2}\n\033[34mCreated on:\033[00m {3}\n".format(
                 user['UserName'],
                 user['UserId'],
                 user['Arn'],
@@ -498,19 +738,34 @@ def program(decision):
                 )
             )
         
+        print("\033[95m" + "-"*80 + "\033[0m")
         print("Listing all users in Terraform file...\n")
         time.sleep(0.5)
 
-        for user in dict_variables["users"]:
-            for key in user:
-                print("User: {0}\nRestrictions: {1}\n".format(
-                    user[key]["username"],
-                    user[key]["restrictions"]["restriction_name"]
-                    )
-                )
+        if len(dict_variables["users"]) == 0:
+            print("No users in Terraform file.\n")
+            print("\033[95m" + "-"*80 + "\033[0m")
+            print("Returning to main menu...\n")
+            time.sleep(0.8)
+            os.system("cls")
+            mycommands()
 
-        time.sleep(0.8)
-        mycommands()
+        for key in dict_variables["users"]:
+            print("\033[34mUser:\033[00m " + key["username"])
+
+        print("\033[95m" + "-"*80 + "\033[0m")
+        back = input("\nPress ENTER to return to main menu...")
+
+        while back != "":
+            print("\033[31mInvalid option. Please try again.\033[00m")
+            time.sleep(0.2)
+            back = input("\nPress ENTER to return to main menu...")
+
+        if back == "":
+            print("Returning to main menu...")
+            time.sleep(0.8)
+            os.system("cls")
+            mycommands()
 
     # ---------------------------------- EXIT ---------------------------------- #
     if decision == "11":

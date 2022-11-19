@@ -41,6 +41,7 @@ resource "aws_security_group" "security_group" {
   vpc_id      = aws_vpc.vpc_east_2.id
 
   ingress = [for rule in each.value.security_ingress : rule.rules]
+  egress  = [for rule in each.value.security_egress : rule.rules]
 }
 
 resource "aws_instance" "app_server" {

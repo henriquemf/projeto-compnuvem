@@ -32,6 +32,17 @@ variable "security_groups" {
       security_groups = list(string)
       cidr_blocks = list(string)
     })))
+    security_egress = list(map(object({
+      description = string
+      from_port = number
+      to_port = number
+      protocol = string
+      ipv6_cidr_blocks = list(string)
+      prefix_list_ids = list(string)
+      self = bool
+      security_groups = list(string)
+      cidr_blocks = list(string)
+    })))
   }))
 }
 
