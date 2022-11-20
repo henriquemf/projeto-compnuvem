@@ -11,18 +11,18 @@ os.system('cls')
 path = input("\033[1;32m\n" + "-"*80 + "\n" + " "*30 + "SELECT THE REGION" + " "*30 + "\n" + "-"*80 + "\033[0m" + "\n\n\033[1;32m1.\033[0m us-east-1 (North Virginia)\n\033[1;32m2.\033[0m us-east-2 (Ohio): \n\n")
 os.system("cls")
 
-if path == "1":
-    os.chdir('terraform-east-1')
-    session = boto3.Session(profile_name='default', region_name='us-east-1')
-elif path == "2":
-    os.chdir('terraform-east-2')
-    session = boto3.Session(profile_name='default', region_name='us-east-2')
 while path != "1" and path != "2":
     print("\033[31mInvalid option, please try again\033[00m\n")
     time.sleep(0.8)
     os.system("cls")
     path = input("\033[1;32m\n" + "-"*80 + "\n" + " "*30 + "SELECT THE REGION" + " "*30 + "\n" + "-"*80 + "\033[0m" + "\n\n\033[1;32m1.\033[0m us-east-1 (North Virginia)\n\033[1;32m2.\033[0m us-east-2 (Ohio): \n\n")
     os.system("cls")
+if path == "1":
+    os.chdir('terraform-east-1')
+    session = boto3.Session(profile_name='default', region_name='us-east-1')
+elif path == "2":
+    os.chdir('terraform-east-2')
+    session = boto3.Session(profile_name='default', region_name='us-east-2')
 
 ec2client = session.client('ec2')
 ec2iam = session.client('iam')
@@ -678,7 +678,11 @@ def program(decision):
             print(key["username"])
         print("\033[95m" + "-"*80 + "\033[0m")
         print("Existing users in AWS: \n")
+
+        list_users_del = []
+
         for user in ec2iam.list_users()['Users']:
+            list_users_del.append(user['UserName'])
             print("\033[34mUser:\033[0m {0}\n\033[34mUserID:\033[0m {1}\n\n".format(
                 user['UserName'],
                 user['UserId']
@@ -691,10 +695,22 @@ def program(decision):
             time.sleep(0.8)
             os.system("cls")
             mycommands()
-        for key in list(dict_variables["users"]):
+        
+        if user not in [key["username"] for key in dict_variables["users"]] and user in list_users_del:
+            print("\n\033[31mUser does not exist in Terraform file!\033[00m\n")
+            print("But it exists in AWS. Deleting user from AWS...\n")
+            os.system('terraform apply -var-file=secret.tfvars')
+            print("\n\033[1;32mUser deleted from AWS successfully.\033[00m \n")
+            time.sleep(0.2)
+            print("Returning to main menu...\n")
+            time.sleep(0.8)
+            os.system("cls")
+            mycommands()
+            
+        for key in dict_variables["users"]:
             if key["username"] == user:
                 dict_variables["users"].remove(key)
-
+        
         time.sleep(0.4)
         print("Deleting user " + user + "from JSON file\n")
 
