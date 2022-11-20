@@ -446,17 +446,26 @@ def program(decision):
                 sg = input("Security Group NAME or ID to list the rules \n\033[1;32mPress ENTER to return to menu:\033[00m \n")
             
             if sg in groups or sg in sg_ids:
+                os.system("cls")
                 print("\033[95m" + "-"*80 + "\033[0m")
-                print("\033[95m" + " "*30 + "LISTING SECURITY GROUP" + sg + "RULES\033[0m" + " "*30)
+                print("\033[95m" + " "*30 + "SECURITY GROUP RULES\033[0m" + " "*30)
                 print("\033[95m" + "-"*80 + "\033[0m")
-
-                print("Showing rules... \n")
-                time.sleep(0.4)
-                for rule in each.ip_permissions:
-                    print("\033[34mFrom port:\033[00m " + str(rule["FromPort"]) + " " + "\033[34m| To port:\033[00m " 
-                    + str(rule["ToPort"]) + " " + "\033[34m| Protocol:\033[00m " + rule["IpProtocol"] + " " + 
-                    "\033[34m| CIDR blocks:\033[00m " + str(rule["IpRanges"]) + "\n")
-                print("\033[95m" + "-"*80 + "\033[0m")
+                print("\033[34mName:\033[00m " + sg + "\n")
+                print("\033[34mIngress rules:\033[00m \n")
+                for ingress in dict_variables["security_groups"][sg]["security_ingress"]:
+                    time.sleep(0.2)
+                    print("\033[95mDescription:\033[00m " + ingress["rules"]["description"] + "\033[95m | From port:\033[00m " + 
+                    ingress["rules"]["from_port"] + "\033[95m | To port:\033[00m " + ingress["rules"]["to_port"] + 
+                    "\033[95m | Protocol:\033[00m " + ingress["rules"]["protocol"] 
+                    + "\033[95m | CIDR:\033[00m " + str(ingress["rules"]["cidr_blocks"]) + "\n")
+                print("\033[34mEgress rules:\033[00m \n")
+                for egress in dict_variables["security_groups"][sg]["security_egress"]:
+                    time.sleep(0.2)
+                    print("\033[95mDescription:\033[00m " + egress["rules"]["description"] + "\033[95m | From port:\033[00m " + 
+                    egress["rules"]["from_port"] + "\033[95m | To port:\033[00m " + egress["rules"]["to_port"] + 
+                    "\033[95m | Protocol:\033[00m " + egress["rules"]["protocol"] 
+                    + "\033[95m | CIDR:\033[00m " + str(egress["rules"]["cidr_blocks"]) + "\n")
+                print("\033[95m" + "-"*80 + "\033[0m") 
                 back = input("\nPress ENTER to return to main menu...")
 
                 while back != "":
@@ -472,17 +481,25 @@ def program(decision):
 
         elif list_decision == "2":
             if sg in dict_variables["security_groups"]:
+                os.system("cls")
+                print("\033[95m" + "-"*80 + "\033[0m")
+                print("\033[95m" + " "*30 + "SECURITY GROUP RULES\033[0m" + " "*30)
+                print("\033[95m" + "-"*80 + "\033[0m")
                 print("\033[34mName:\033[00m " + sg + "\n")
                 print("\033[34mIngress rules:\033[00m \n")
                 for ingress in dict_variables["security_groups"][sg]["security_ingress"]:
-                    print(ingress["rules"]["description"] + " " + ingress["rules"]["from_port"] + " " + 
-                    ingress["rules"]["to_port"] + " " + ingress["rules"]["protocol"] + " " + 
-                    str(ingress["rules"]["cidr_blocks"]) + "\n")
+                    time.sleep(0.2)
+                    print("\033[95mDescription:\033[00m " + ingress["rules"]["description"] + "\033[95m | From port:\033[00m " + 
+                    ingress["rules"]["from_port"] + "\033[95m | To port:\033[00m " + ingress["rules"]["to_port"] + 
+                    "\033[95m | Protocol:\033[00m " + ingress["rules"]["protocol"] 
+                    + "\033[95m | CIDR:\033[00m " + str(ingress["rules"]["cidr_blocks"]) + "\n")
                 print("\033[34mEgress rules:\033[00m \n")
                 for egress in dict_variables["security_groups"][sg]["security_egress"]:
-                    print(egress["rules"]["description"] + " " + egress["rules"]["from_port"] + " " + 
-                    egress["rules"]["to_port"] + " " + egress["rules"]["protocol"] + " " + 
-                    str(egress["rules"]["cidr_blocks"]) + "\n")
+                    time.sleep(0.2)
+                    print("\033[95mDescription:\033[00m " + egress["rules"]["description"] + "\033[95m | From port:\033[00m " + 
+                    egress["rules"]["from_port"] + "\033[95m | To port:\033[00m " + egress["rules"]["to_port"] + 
+                    "\033[95m | Protocol:\033[00m " + egress["rules"]["protocol"] 
+                    + "\033[95m | CIDR:\033[00m " + str(egress["rules"]["cidr_blocks"]) + "\n")
                 print("\033[95m" + "-"*80 + "\033[0m") 
                 back = input("\nPress ENTER to return to main menu...")
                 while back != "":
@@ -543,6 +560,12 @@ def program(decision):
                 print("Please try again.\n")
                 os.system("cls")
                 sg = input("Enter the security group name to delete" + "\033[33mOR\033[00m" + "press ENTER to come back: \n")
+
+                if sg == "":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
             
             if sg in dict_variables["security_groups"]:
                 dict_variables["security_groups"].pop(sg)
@@ -605,6 +628,11 @@ def program(decision):
                 print("Please try again.\n")
                 os.system("cls")
                 sg = input("Enter the security group name to delete a rule" + "\033[33mOR\033[00m" + "press ENTER to come back: \n")
+                if sg == "":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
 
             if sg in dict_variables["security_groups"]:
                 os.system("cls")
@@ -646,6 +674,11 @@ def program(decision):
                         time.sleep(0.8)
                         os.system("cls")
                         i_rule = int(input("Enter the rule number to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n"))
+                        if i_rule == "":
+                            print("Returning to main menu...")
+                            time.sleep(0.8)
+                            os.system("cls")
+                            mycommands()
 
                     dict_variables["security_groups"][sg]["security_ingress"].pop(i_rule-1)
                     time.sleep(0.4)
@@ -673,7 +706,12 @@ def program(decision):
                         time.sleep(0.8)
                         os.system("cls")
                         e_rule = int(input("Enter the rule number to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n"))
- 
+                        if e_rule == "":
+                            print("Returning to main menu...")
+                            time.sleep(0.8)
+                            os.system("cls")
+                            mycommands()
+
                     dict_variables["security_groups"][sg]["security_egress"].pop(e_rule-1)
                     time.sleep(0.4)
 
@@ -714,7 +752,11 @@ def program(decision):
     # ---------------------------------- APPLY CHANGES ---------------------------------- #
     if decision == "7":
         os.system("cls")
-        print("Applying all changes...")
+        print("\033[95m" + "-"*80 + "\033[0m")
+        print("\033[95m" + " "*30 + "APPLY CHANGES\033[0m" + " "*30)
+        print("\033[95m" + "-"*80 + "\033[0m")
+
+        print("\nApplying all changes...\n")
         time.sleep(0.8)
         
         #check if .terraform.lock.hcl exists
