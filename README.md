@@ -23,7 +23,7 @@
 - Regras personalizadas em security groups (ingress e egress) :heavy_check_mark:
 - Instâncias em mais de uma região (us-east-1 e us-east-2) :heavy_check_mark:
 - Associar restrições a usuários :heavy_check_mark:
-- Deletar regras security groups :heavy_check_mark:
+- Deletar regras em security groups :heavy_check_mark:
 
 
 ## Instruções:
