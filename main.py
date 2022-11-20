@@ -335,6 +335,7 @@ def program(decision):
             sg_rule = input("Enter the security group name to add rules: \n")
     
         else:
+            os.system("cls")
             print("\033[95m" + "-"*80 + "\033[0m")
             print("\033[95m" + " "*25 + "ADDING RULES TO SECURITY GROUP " + sg_rule +"\033[0m" + " "*25)
             print("\033[95m" + "-"*80 + "\033[0m")
@@ -427,36 +428,80 @@ def program(decision):
             time.sleep(0.8)
             os.system("cls")
             mycommands()
-
-        while sg not in groups or sg not in sg_ids:
-            print("\n\033[31mSecurity group not found in AWS!\033[00m")
-            time.sleep(0.2)
-            print("Please try again.\n")
-            os.system("cls")
-            sg = input("Security Group NAME or ID to list the rules \n\033[1;32mPress ENTER to return to menu:\033[00m \n")
         
-        if sg in groups or sg in sg_ids:
-            print("\033[95m" + "-"*80 + "\033[0m")
-            print("\033[95m" + " "*30 + "LISTING SECURITY GROUP" + sg + "RULES\033[0m" + " "*30)
-            print("Showing rules... \n")
-            time.sleep(0.4)
-            for rule in each.ip_permissions:
-                print("\033[34mFrom port:\033[00m " + str(rule["FromPort"]) + " " + "\033[34m| To port:\033[00m " 
-                + str(rule["ToPort"]) + " " + "\033[34m| Protocol:\033[00m " + rule["IpProtocol"] + " " + 
-                "\033[34m| CIDR blocks:\033[00m " + str(rule["IpRanges"]) + "\n")
-            print("\033[95m" + "-"*80 + "\033[0m")
-            back = input("\nPress ENTER to return to main menu...")
+        list_decision = input("Do you want to list from Terraform file or AWS? (1/2): \n")
 
-            while back != "":
-                print("\033[31mInvalid option. Please try again.\033[00m")
+        while list_decision != "1" and list_decision != "2" or list_decision == "":
+            print("\033[31mInvalid option. Please try again.\033[00m")
+            time.sleep(0.8)
+            os.system("cls")
+            list_decision = input("Do you want to list from Terraform file or AWS? (1/2): \n")
+
+        if list_decision == "1":
+            while sg not in groups or sg not in sg_ids:
+                print("\n\033[31mSecurity group not found in AWS!\033[00m")
                 time.sleep(0.2)
+                print("Please try again.\n")
+                os.system("cls")
+                sg = input("Security Group NAME or ID to list the rules \n\033[1;32mPress ENTER to return to menu:\033[00m \n")
+            
+            if sg in groups or sg in sg_ids:
+                print("\033[95m" + "-"*80 + "\033[0m")
+                print("\033[95m" + " "*30 + "LISTING SECURITY GROUP" + sg + "RULES\033[0m" + " "*30)
+                print("\033[95m" + "-"*80 + "\033[0m")
+
+                print("Showing rules... \n")
+                time.sleep(0.4)
+                for rule in each.ip_permissions:
+                    print("\033[34mFrom port:\033[00m " + str(rule["FromPort"]) + " " + "\033[34m| To port:\033[00m " 
+                    + str(rule["ToPort"]) + " " + "\033[34m| Protocol:\033[00m " + rule["IpProtocol"] + " " + 
+                    "\033[34m| CIDR blocks:\033[00m " + str(rule["IpRanges"]) + "\n")
+                print("\033[95m" + "-"*80 + "\033[0m")
                 back = input("\nPress ENTER to return to main menu...")
 
-            if back == "":
+                while back != "":
+                    print("\033[31mInvalid option. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    back = input("\nPress ENTER to return to main menu...")
+
+                if back == "":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
+
+        elif list_decision == "2":
+            if sg in dict_variables["security_groups"]:
+                print("\033[34mName:\033[00m " + sg + "\n")
+                print("\033[34mIngress rules:\033[00m \n")
+                for ingress in dict_variables["security_groups"][sg]["security_ingress"]:
+                    print(ingress["rules"]["description"] + " " + ingress["rules"]["from_port"] + " " + 
+                    ingress["rules"]["to_port"] + " " + ingress["rules"]["protocol"] + " " + 
+                    str(ingress["rules"]["cidr_blocks"]) + "\n")
+                print("\033[34mEgress rules:\033[00m \n")
+                for egress in dict_variables["security_groups"][sg]["security_egress"]:
+                    print(egress["rules"]["description"] + " " + egress["rules"]["from_port"] + " " + 
+                    egress["rules"]["to_port"] + " " + egress["rules"]["protocol"] + " " + 
+                    str(egress["rules"]["cidr_blocks"]) + "\n")
+                print("\033[95m" + "-"*80 + "\033[0m") 
+                back = input("\nPress ENTER to return to main menu...")
+                while back != "":
+                    print("\033[31mInvalid option. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    back = input("\nPress ENTER to return to main menu...")
+                if back == "":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
+            else:
+                print("\n\033[31mSecurity group not found in Terraform file!\033[00m")
+                time.sleep(0.2)
+                print("Please try again.\n")
+                os.system("cls")
                 print("Returning to main menu...")
                 time.sleep(0.8)
                 os.system("cls")
-                mycommands()
 
     # ---------------------------------- DELETE SECURITY GROUP ---------------------------------- #
     if decision == "6":
@@ -474,67 +519,197 @@ def program(decision):
         for each in ec2re.security_groups.all():
             sgs.append(each.group_name)
 
-        print("\033[31mWARNING: All instances attached to the security group will be deleted.\033[00m \n")
-        sg = input("Enter the security group name to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n")
-
-        if sg == "":
-            print("Returning to main menu...")
-            time.sleep(0.8)
-            os.system("cls")
-            mycommands()
-
-        while sg not in dict_variables["security_groups"]:
-            print("\n\033[31mSecurity group not found in the JSON!\033[00m")
+        rule_or_all = input("Do you want to delete a security group (1) or one rule (2)? (1/2): \n")
+        while rule_or_all != "1" and rule_or_all != "2":
+            print("\033[31mInvalid option. Please try again.\033[00m")
             time.sleep(0.2)
-            print("Please try again.\n")
             os.system("cls")
-            sg = input("Enter the security group name to delete" + "\033[33mOR\033[00m" + "press ENTER to come back: \n")
+            rule_or_all = input("Do you want to delete a security group (1) or one rule (2)? (1/2): \n")
         
-        if sg in dict_variables["security_groups"]:
-            dict_variables["security_groups"].pop(sg)
-            for key in list(dict_variables["instances"]):
-                if dict_variables["instances"][key]["security_name"] == sg:
-                    dict_variables["instances"].pop(key)
+        if rule_or_all == "1":
 
-            time.sleep(0.4)
+            print("\033[31mWARNING: All instances attached to the security group will be deleted.\033[00m \n")
+            sg = input("Enter the security group name to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n")
 
-            print("Deleting the security group from JSON file: " + sg + "\n")
-            write_json(dict_variables)
-            
-            print("\n\033[1;32mSecurity group deleted from the JSON successfully.\033[00m \n")
-            time.sleep(0.2)
-            os.system("cls")
-            aws = input("Do you want to delete it from AWS? (y/n) \n")
-
-            while aws not in ["y", "n"]:
-                print("\n\033[31mInvalid option!\033[00m")
-                time.sleep(0.2)
-                print("Please try again.\n")
-                os.system("cls")
-                aws = input("Do you want to delete it from AWS? (y/n) \n")
-            
-            if aws == "y":
-                if sg not in sgs:
-                    print("\n\033[31mSecurity group not found in AWS!\033[00m")
-                    time.sleep(0.2)
-                    print("Please try again.\n")
-                    os.system("cls")
-                    mycommands()
-                print("Deleting " + sg + " from AWS...\n")
-                os.system('terraform apply -var-file=secret.tfvars')
-                os.system("cls")
-                print("\n\033[1;32mSecurity group deleted from AWS successfully.\033[00m \n")
-                time.sleep(0.2)
-                print("Returning to main menu...\n")
-                time.sleep(0.8)
-                os.system("cls")
-                mycommands()
-
-            elif aws == "n":
+            if sg == "":
                 print("Returning to main menu...")
                 time.sleep(0.8)
                 os.system("cls")
                 mycommands()
+
+            while sg not in dict_variables["security_groups"]:
+                print("\n\033[31mSecurity group not found in the JSON!\033[00m")
+                time.sleep(0.2)
+                print("Please try again.\n")
+                os.system("cls")
+                sg = input("Enter the security group name to delete" + "\033[33mOR\033[00m" + "press ENTER to come back: \n")
+            
+            if sg in dict_variables["security_groups"]:
+                dict_variables["security_groups"].pop(sg)
+                for key in list(dict_variables["instances"]):
+                    if dict_variables["instances"][key]["security_name"] == sg:
+                        dict_variables["instances"].pop(key)
+
+                time.sleep(0.4)
+
+                print("Deleting the security group from JSON file: " + sg + "\n")
+                write_json(dict_variables)
+                
+                print("\n\033[1;32mSecurity group deleted from the JSON successfully.\033[00m \n")
+                time.sleep(0.2)
+                os.system("cls")
+                aws = input("Do you want to delete it from AWS? (y/n) \n")
+
+                while aws not in ["y", "n"]:
+                    print("\n\033[31mInvalid option!\033[00m")
+                    time.sleep(0.2)
+                    print("Please try again.\n")
+                    os.system("cls")
+                    aws = input("Do you want to delete it from AWS? (y/n) \n")
+                
+                if aws == "y":
+                    if sg not in sgs:
+                        print("\n\033[31mSecurity group not found in AWS!\033[00m")
+                        time.sleep(0.2)
+                        print("Please try again.\n")
+                        os.system("cls")
+                        mycommands()
+                    print("Deleting " + sg + " from AWS...\n")
+                    os.system('terraform apply -var-file=secret.tfvars')
+                    os.system("cls")
+                    print("\n\033[1;32mSecurity group deleted from AWS successfully.\033[00m \n")
+                    time.sleep(0.2)
+                    print("Returning to main menu...\n")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
+
+                elif aws == "n":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
+        
+        elif rule_or_all == "2":
+            sg = input("Enter the security group name to delete a rule" + "\033[33m OR \033[00m" + "press ENTER to come back: \n")
+
+            if sg == "":
+                print("Returning to main menu...")
+                time.sleep(0.8)
+                os.system("cls")
+                mycommands()
+
+            while sg not in dict_variables["security_groups"]:
+                print("\n\033[31mSecurity group not found in the JSON!\033[00m")
+                time.sleep(0.2)
+                print("Please try again.\n")
+                os.system("cls")
+                sg = input("Enter the security group name to delete a rule" + "\033[33mOR\033[00m" + "press ENTER to come back: \n")
+
+            if sg in dict_variables["security_groups"]:
+                os.system("cls")
+                print("\033[95m" + "-"*80 + "\033[0m")
+                print("\033[95m" + " "*30 + "SECURITY GROUP RULES\033[0m" + " "*30)
+                print("\033[95m" + "-"*80 + "\033[0m")
+                print("\033[34mName:\033[00m " + sg + "\n")
+                print("\033[34mIngress rules:\033[00m \n")
+                for ingress in dict_variables["security_groups"][sg]["security_ingress"]:
+                    time.sleep(0.2)
+                    print("\033[95mDescription:\033[00m " + ingress["rules"]["description"] + "\033[95m | From port:\033[00m " + 
+                    ingress["rules"]["from_port"] + "\033[95m | To port:\033[00m " + ingress["rules"]["to_port"] + 
+                    "\033[95m | Protocol:\033[00m " + ingress["rules"]["protocol"] 
+                    + "\033[95m | CIDR:\033[00m " + str(ingress["rules"]["cidr_blocks"]) + "\n")
+                print("\033[34mEgress rules:\033[00m \n")
+                for egress in dict_variables["security_groups"][sg]["security_egress"]:
+                    time.sleep(0.2)
+                    print("\033[95mDescription:\033[00m " + egress["rules"]["description"] + "\033[95m | From port:\033[00m " + 
+                    egress["rules"]["from_port"] + "\033[95m | To port:\033[00m " + egress["rules"]["to_port"] + 
+                    "\033[95m | Protocol:\033[00m " + egress["rules"]["protocol"] 
+                    + "\033[95m | CIDR:\033[00m " + str(egress["rules"]["cidr_blocks"]) + "\n")
+                print("\033[95m" + "-"*80 + "\033[0m") 
+
+                i_or_e = input("Is it an ingress (1) or egress (2) rule? (1/2): \n")
+
+                if i_or_e == "1":
+                    i_rule = int(input("Enter the rule number to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n"))
+
+                    if i_rule == "":
+                        print("Returning to main menu...")
+                        time.sleep(0.8)
+                        os.system("cls")
+                        mycommands()
+
+                    while dict_variables["security_groups"][sg]["security_ingress"][i_rule-1] not in dict_variables["security_groups"][sg]["security_ingress"] or i_rule == 0:
+                        print("\n\033[31mRule not found in the JSON!\033[00m")
+                        time.sleep(0.5)
+                        print("Please try again.\n")
+                        time.sleep(0.8)
+                        os.system("cls")
+                        i_rule = int(input("Enter the rule number to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n"))
+
+                    dict_variables["security_groups"][sg]["security_ingress"].pop(i_rule-1)
+                    time.sleep(0.4)
+
+                    print("Deleting the rule from JSON file \n")
+                    write_json(dict_variables)
+
+                    print("\n\033[1;32mRule deleted from the JSON successfully.\033[00m \n")
+                    time.sleep(0.2)
+                    os.system("cls")
+                
+                elif i_or_e == "2":
+                    e_rule = int(input("Enter the rule number to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n"))
+
+                    if e_rule == "":
+                        print("Returning to main menu...")
+                        time.sleep(0.8)
+                        os.system("cls")
+                        mycommands()
+
+                    while dict_variables["security_groups"][sg]["security_egress"][e_rule-1] not in dict_variables["security_groups"][sg]["security_egress"] or e_rule == 0:
+                        print("\n\033[31mRule not found in the JSON!\033[00m")
+                        time.sleep(0.5)
+                        print("Please try again.\n")
+                        time.sleep(0.8)
+                        os.system("cls")
+                        e_rule = int(input("Enter the rule number to delete" + "\033[33m OR \033[00m" + "press ENTER to come back: \n"))
+ 
+                    dict_variables["security_groups"][sg]["security_egress"].pop(e_rule-1)
+                    time.sleep(0.4)
+
+                    print("Deleting the rule from JSON file \n")
+                    write_json(dict_variables)
+
+                    print("\n\033[1;32mRule deleted from the JSON successfully.\033[00m \n")
+                    time.sleep(0.2)
+                    os.system("cls")
+
+                aws = input("Do you want to delete it from AWS? (y/n) \n")
+
+                while aws not in ["y", "n"]:
+                    print("\n\033[31mInvalid option!\033[00m")
+                    time.sleep(0.2)
+                    print("Please try again.\n")
+                    os.system("cls")
+                    aws = input("Do you want to delete it from AWS? (y/n) \n")
+                
+                if aws == "y":
+                    print("Deleting rule from AWS...\n")
+                    os.system("cls")
+                    os.system('terraform apply -var-file=secret.tfvars')
+                    os.system("cls")
+                    print("\n\033[1;32mRule deleted from AWS successfully.\033[00m \n")
+                    time.sleep(0.2)
+                    print("Returning to main menu...\n")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
+                
+                elif aws == "n":
+                    print("Returning to main menu...")
+                    time.sleep(0.8)
+                    os.system("cls")
+                    mycommands()
 
     # ---------------------------------- APPLY CHANGES ---------------------------------- #
     if decision == "7":
