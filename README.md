@@ -45,7 +45,7 @@ Agora, é necessário setar e configurar o ambiente de desenvolvimento na própr
 
 ***IMPORTANTE*** :stop_sign:: ao criar seu usuário na AWS, guarde as informações em um .csv conforme pode ser feito durante a própria criação e ***JAMAIS*** forneça essas informações ou as publique em nenhum lugar, ***PRINCIPALMENTE*** a ACCESS_KEY e SECRET_KEY. Essas informações são de alta importância e podem ser utilizadas para abuso do sistema, gerando altos custos ao provedor. 
 
-## Iniciando o ambiente de trabalho
+## Iniciando o ambiente de trabalho :man_factory_worker:
 
 Agora, com o Terraform instalado e o sistema configurado, podemos começar a criar os arquivos. Para isso, na pasta selecionada, foi criado um arquivo `main.tf`. Nele, serão executadas as funções principais de execução e configuração do seu software. Após isso, também foi criado um `provider.tf`, onde será fornecido, justamente, o provedor dos serviços utilizados que, nesse caso, é a AWS. Contudo, nesse projeto em questão, foi tudo colocado em apenas um único arquivo, o `main.tf`.
 
@@ -94,7 +94,7 @@ secret_key = ""
 
 Agora, algumas outras explicações devem ser fornecidas para compreensão completa do funcionamento do programa do Terraform. Sendo assim, ainda no `main.tf`, foram aplicadas os resources para a criação de *instâncias*, *security groups*, *vpc* e *subnet*. Neles, ao analisar o arquivo desse repositório, é possível observar que foram utilizdos uma função denominada `for_each`, a qual é capaz de percorrer listas e objetos para definir múltiplas variáveis de uma vez e, nesse projeto, isso é de extrema importância já que deve ser possível a criação de múltiplas instâncias e security_groups de uma vez, além de regras múltiplas para os SGs. 
 
-## Trabalhando com as variáveis
+## Trabalhando com as variáveis :traffic_light:
 
 No entanto, a pergunta principal é: como fazer com que o Terraform altere as variáveis desejadas de acordo com a vontade e o input do usuário no terminal?. Para isso, foi utilizado um arquivo .json chamado `.auto.tfvars.json`, o qual o próprio Terraform é capaz de lê-lo automaticamente em toda execução, checando quais variáveis que foram declaradas nos arquivos `main.tf` e `variables.tf` estão presentes nesse JSON e, caso esteja presente, irá alterar *automaticamente* os valores de cada uma das variáveis presentes. Abaixo, há um exemplo do arquivo JSON completo para melhor compreensão:
 
@@ -171,7 +171,7 @@ Muito complicado? Tome um café e pense novamente no que acabou de ler :coffee: 
 
 Bom, agora ficou mais fácil e possível realizar operações com múltiplos valores de instâncais, SGs, etc.. Com isso, foram criados de maneira similar/análoga a isso os security groups, sendo que, nesse projeto, cada security group pode estar atrelado a mais de uma instância, mas uma instância está atrelada apenas a um único SG. 
 
-## VPC's e Subnets
+## VPC's e Subnets :construction:
 
 No projeto, foi criado apenas uma única VPC e Subnet por região da AWS, sendo esse um resource fixo e sem possibilidade de alteração pelo usuário no terminal de uso:
 
@@ -195,11 +195,15 @@ resource "aws_subnet" "vpc_east_1_subnet" {
 }
 ```
 
-## Criando usuários
+## Criando usuários :bust_in_silhouette:
 
 Agora, é necessário que sejam criados usuários com nome e permissões específicas que podem ser declaradas pelo próprio criador. Para isso, foi utilizado o arquivo `user.tf`, onde foram criadas as _policies_ de cada usuário, o usuário em si e os _attachments_ entre eles. Além disso, também foi criado um `output.tf` para que, ao final da execução do programa do Terraform, seja mostrado no terminal a senha de acesso ao console da AWS do novo usuário criado.
 
-## Bibliotecas necessárias
+## Trabalhando com regiões :globe_with_meridians:
+
+Para que seja possível o usuário escolher a região na qual vai trabalhar e dar _deploy_ nas funcionalidades desejadas, sem que interfira em outra região, foi necessário utilizar pastas diferentes para cada uma das regiões. Nesse projeto, foi utilizado apenas 2 regiões: us-east-1 (no arquivo `terraform-east-1`) e us-east-2 (no arquivo `terraform-east-2`). Com isso, no Python, ao executar os comandos abaixo para a execução do Terraform e a aplicação na AWS, foi trocado o diretório de trabalho de acordo com a decisão do usuário da região que deseja trabalhar tendo, nessas pastas, todos os arquivos necessários para as funcionalidades.
+
+## Bibliotecas necessárias :books:
 
 Para a criação da interface visual foi utilizado a linguagem Python e as bibliotecas Click, Json, OS, TQDM, Time e Boto3. Será necessário instalar apenas a Click, Boto3 e TQDM:
 
@@ -214,7 +218,18 @@ Para fornecer explicações do que cada uma delas fazem:
 
 ## Instruções de uso:
 
-- Executar o comando abaixo dentro da pasta projeto-compnuvem:
+Executar o comando abaixo dentro da pasta projeto-compnuvem:
 ```
 python ./main.py program
 ```
+
+Após executar, caso tenha dado tudo certo, a seguinte tela deverá aparecer:
+
+![image](https://user-images.githubusercontent.com/62613979/203544563-a8f35d31-2299-4e2d-abfe-72e455516edf.png)
+
+Ao selecionar a região desejada, será listado todas as opções ao usuário de funcionalidades disponíveis no programa:
+
+![image](https://user-images.githubusercontent.com/62613979/203544704-94c56db6-86ff-4def-91a6-21ffb22735ac.png)
+
+Após isso, sinta-se livre para usar e explorar as funcionalidades oferecidas, sendo elas descritas logo no início desse READ.me, nos conceitos do Projeto :D
+
