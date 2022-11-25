@@ -830,7 +830,7 @@ def program(decision):
             print("\033[95m" + "-"*80 + "\033[0m")
             
         elif rules == "n": 
-            print("Applyinng no restrictions to user " + username + "\n")
+            print("Applying no restrictions to user " + username + "\n")
             restrictions = "user_full_access"
             action = "*"
             resource = "*"
