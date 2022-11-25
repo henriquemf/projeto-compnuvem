@@ -203,6 +203,20 @@ Agora, é necessário que sejam criados usuários com nome e permissões especí
 
 Para que seja possível o usuário escolher a região na qual vai trabalhar e dar _deploy_ nas funcionalidades desejadas, sem que interfira em outra região, foi necessário utilizar pastas diferentes para cada uma das regiões. Nesse projeto, foi utilizado apenas 2 regiões: us-east-1 (no arquivo `terraform-east-1`) e us-east-2 (no arquivo `terraform-east-2`). Com isso, no Python, ao executar os comandos abaixo para a execução do Terraform e a aplicação na AWS, foi trocado o diretório de trabalho de acordo com a decisão do usuário da região que deseja trabalhar tendo, nessas pastas, todos os arquivos necessários para as funcionalidades.
 
+## Execução
+
+No programa da interface visual feita em Python, é rodado os seguintes comandos, necessários para a execução do Terraform:
+
+```
+terraform init
+terraform plan -var-files=secret.tfvars
+terraform apply -var-files=secret.tfvars
+```
+
+O comando do `terraform init` é responsável por inicializar e configurar o _backend_ do Terraform, precisando ser executado uma única vez. Já o comando `terraform plan -var-files=secret.tfvars` é responsável por checar se há erros de resources ou configurações nos arquivos do Terraform, isso tudo utilizando o arquivo de variáveis contendo ACCESS_KEY_ID e SECRET_KEY_ID, necessários para que o Terraform seja capaz de acessar a AWS do usuário e realizar as operações.
+
+***IMPORTANTE:*** Para que o usuário seja capaz de utilizar esse repositório, basta preencher os valores de access_key e secret_key no arquivo secret_template.tfvars e renomeá-lo para secret.tfvars
+
 ## Bibliotecas necessárias :books:
 
 Para a criação da interface visual foi utilizado a linguagem Python e as bibliotecas Click, Json, OS, TQDM, Time e Boto3. Será necessário instalar apenas a Click, Boto3 e TQDM:
