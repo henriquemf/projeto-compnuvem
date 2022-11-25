@@ -44,7 +44,7 @@ def program(decision):
         contador = 0
     else:
         dict_variables = json.load(open(".auto.tfvars.json"))
-        contador = len(dict_variables["security_groups"])
+        contador = len(dict_variables["instances"])
 
     # ---------------------------------- CREATE INSTANCE ---------------------------------- #
     if decision == "1":
@@ -54,24 +54,32 @@ def program(decision):
         print("\033[95m" + "-"*80 + "\033[0m")
         contador += 1
         dict_instance_key = 'instance_' + str(contador)
-        name = input("Name of the instance: \n")
-        type = input("Instance type [t2.micro, t2.nano]: \n")
-        while type != "t2.micro" and type != "t2.nano":
+        name = input("\033[1;32mINSTANCE NAME\033[00m: ")
+        print("\033[1;32m" + "-"*40 + "\033[0m")
+        type = input("\n\033[1;32mINSTANCE TYPE\033[00m\n\n\033[1;32m1.\033[00mt2.micro\n\033[1;32m2.\033[00mt2.nano\n\n")
+        while type != "1" and type != "2":
             print("\033[31mInvalid instance type, please try again\033[00m\n")
             time.sleep(0.8)
-            type = input("Instance type [t2.micro, t2.nano]: \n")
-        
-        security = input("Do you want to create a security group? (y/n) \n")
+            print("\033[1;32m" + "-"*40 + "\033[0m")
+            type = input("\n\033[1;32mINSTANCE TYPE\033[00m\n\n\033[1;32m1.\033[00mt2.micro\n\033[1;32m2.\033[00mt2.nano\n\n")
+        print("\033[1;32m" + "-"*40 + "\033[0m")
+
+        if type == "1":
+            type = "t2.micro"
+        elif type == "2":
+            type = "t2.nano"
+
+        security = input("Do you want to create a security group?\n\n\033[1;32my\033[00m = YES\n\033[1;32mn\033[00m = NO\n\n")
         if security == "y":
             os.system("cls")
             print("\033[95m" + "-"*80 + "\033[0m")
             print("\033[95m" + " "*30 + "CREATING SECURITY GROUP\033[0m" + " "*30)
             print("\033[95m" + "-"*80 + "\033[0m")
-            security_name = input("Name of the security group: \n")
+            security_name = input("\033[1;32mSECURITY GROUP NAME:\033[00m ")
 
             while security_name == "standard" or security_name == "default":
                 print("\033[31mInvalid name, please try again\033[00m\n")
-                security_name = input("Name of the security group: \n")
+                security_name = input("\033[1;32mSECURITY GROUP NAME:\033[00m ")
 
             if security_name in dict_variables["security_groups"]:
                 print("Security group already exists, adding this new instance to it...\n")
@@ -85,7 +93,7 @@ def program(decision):
                 print("Instance created successfully!\n")
                 time.sleep(0.2)
                 
-                apply = input('\nDo you want to apply the changes right now? (y/n):  ')
+                apply = input("Do you want to apply the changes?\n\n\033[1;32my\033[00m = YES\n\033[1;32mn\033[00m = NO\n\n")
                 os.system("cls")
                 if apply == 'y':
                     os.system('terraform init')
@@ -103,21 +111,51 @@ def program(decision):
                     os.system("cls")
                     mycommands()
 
-            security_description = input("Description: \n")
-            security_ingress = input("Ingress description: \n")
-            security_from_port = input("From port: \n")
-            security_to_port = input("To port: \n")
-            security_protocol = input("Protocol: \n")
-            security_cidr_blocks = input("CIDR blocks: \n")
+            security_description = input("\033[1;32mDESCRIPTION:\033[00m ")
+            security_ingress = input("\033[1;32mINGRESS DESCRIPTION:\033[00m ")
+            while security_ingress == "":
+                print("\033[31mInvalid description, please try again\033[00m\n")
+                security_ingress = input("\033[1;32mINGRESS DESCRIPTION:\033[00m ")
+            security_from_port = input("\033[1;32mFROM PORT:\033[00m ")
+            while security_from_port == "" and security_from_port.isdigit() == False:
+                print("\033[31mInvalid port, please try again\033[00m\n")
+                security_from_port = input("\033[1;32mFROM PORT:\033[00m ")
+            security_to_port = input("\033[1;32mTO PORT:\033[00m ")
+            while security_to_port == "" and security_to_port.isdigit() == False:
+                print("\033[31mInvalid port, please try again\033[00m\n")
+                security_to_port = input("\033[1;32mTO PORT:\033[00m ")
+            security_protocol = input("\033[1;32mPROTOCOL:\033[00m ")
+            while security_protocol == "":
+                print("\033[31mInvalid protocol, please try again\033[00m\n")
+                security_protocol = input("\033[1;32mPROTOCOL:\033[00m ")
+            security_cidr_blocks = input("\033[1;32mCIDR BLOCKS:\033[00m ")
+            while security_cidr_blocks == "":
+                print("\033[31mInvalid CIDR block, please try again\033[00m\n")
+                security_cidr_blocks = input("\033[1;32mCIDR BLOCKS:\033[00m ")
 
-            egress_decision = input("Do you want to add egress rules? (y/n) \n")
+            egress_decision = input("\nDo you want to add an egress rule?\n\n\033[1;32my\033[00m = YES\n\033[1;32mn\033[00m = NO\n\n")
             os.system("cls")
             if egress_decision == "y":
-                security_egress = input("Egress description: \n")
-                security_egress_from_port = input("From port: \n")
-                security_egress_to_port = input("To port: \n")
-                security_egress_protocol = input("Protocol: \n")
-                security_egress_cidr_blocks = input("CIDR blocks: \n")
+                security_egress = input("\033[1;32mEGRESS DESCRIPTION:\033[00m ")
+                while security_egress == "":
+                    print("\033[31mInvalid description, please try again\033[00m\n")
+                    security_egress = input("\033[1;32mEGRESS DESCRIPTION:\033[00m ")
+                security_egress_from_port = input("\033[1;32mFROM PORT:\033[00m ")
+                while security_egress_from_port == "" and security_egress_from_port.isdigit() == False:
+                    print("\033[31mInvalid port, please try again\033[00m\n")
+                    security_egress_from_port = input("\033[1;32mFROM PORT:\033[00m ")
+                security_egress_to_port = input("\033[1;32mTO PORT:\033[00m ")
+                while security_egress_to_port == "" and security_egress_to_port.isdigit() == False:
+                    print("\033[31mInvalid port, please try again\033[00m\n")
+                    security_egress_to_port = input("\033[1;32mTO PORT:\033[00m ")
+                security_egress_protocol = input("\033[1;32mPROTOCOL:\033[00m ")
+                while security_egress_protocol == "":
+                    print("\033[31mInvalid protocol, please try again\033[00m\n")
+                    security_egress_protocol = input("\033[1;32mPROTOCOL:\033[00m ")
+                security_egress_cidr_blocks = input("\033[1;32mCIDR BLOCKS:\033[00m ")
+                while security_egress_cidr_blocks == "":
+                    print("\033[31mInvalid CIDR blocks, please try again\033[00m\n")
+                    security_egress_cidr_blocks = input("\033[1;32mCIDR BLOCKS:\033[00m ")
             
             elif egress_decision == "n":
                 print("Adding default egress rules...\n")
@@ -164,7 +202,7 @@ def program(decision):
         print("\n\033[1;32mInstance created successfully!\033[00m\n")
         time.sleep(0.2)
         
-        apply = input('\nDo you want to apply the changes right now? (y/n):  ')
+        apply = input("Do you want to apply the changes?\n\n\033[1;32my\033[00m = YES\n\033[1;32mn\033[00m = NO\n\n")
         if apply == 'y':
             os.system('terraform init')
             os.system('terraform plan -var-file=secret.tfvars')
@@ -188,7 +226,7 @@ def program(decision):
         print("\033[95m" + "-"*80 + "\033[0m")
         print("\033[95m" + " "*30 + "DELETING INSTANCE\033[0m" + " "*30)
         print("\033[95m" + "-"*80 + "\033[0m")
-        print('List of instances: \n')
+        print('ALL INSTANCES LOCALLY: \n')
         for key in dict_variables["instances"]:
             print(key)
 
@@ -270,7 +308,7 @@ def program(decision):
         print("\033[95m" + "-"*80 + "\033[0m")
         print("\033[95m" + " "*30 + "LISTING INSTANCES\033[0m" + " "*30)
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("List of instances in Terraform file: \n")
+        print('ALL INSTANCES LOCALLY: \n')
 
         time.sleep(0.8)
         if dict_variables["instances"] == {}:
@@ -280,7 +318,7 @@ def program(decision):
                 print("\033[34mID:\033[00m " + key + "\033[34m| Name:\033[00m " + dict_variables["instances"][key]["instance_name"] + "\033[34m| Type:\033[00m " + dict_variables["instances"][key]["instance_type"] + "\n")
     
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("List of instances in AWS: \n")
+        print('ALL INSTANCES IN AWS: \n')
         time.sleep(0.4)
 
         for each in ec2re.instances.all():
@@ -308,7 +346,7 @@ def program(decision):
         print("\033[95m" + "-"*80 + "\033[0m")
         print("\033[95m" + " "*25 + "ADDING RULES TO SECURITY GROUP\033[0m" + " "*35)
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("List of security groups in Terraform file: \n")
+        print('ALL SECURITY GROUPS LOCALLY: \n')
         time.sleep(0.8)
         if dict_variables["security_groups"] == {}:
             print("No security groups created yet. \n")
@@ -317,22 +355,22 @@ def program(decision):
                 print("\033[34mName:\033[00m " + key)
         
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("List of security groups in AWS: \n")
+        print('ALL SECURITY GROUPS IN AWS: \n')
         time.sleep(0.4)
 
         for each in ec2re.security_groups.all():
             print("\033[34mName:\033[00m " + each.group_name + "\n")
         
         print("\033[95m" + "-"*80 + "\033[0m")
-        sg_rule = input("Enter the security group name to add rules: \n")
+        sg_rule = input("\nEnter the security group name to add rules: ")
         while sg_rule == "":
             print("\033[31mNo security group name entered. Please try again.\033[00m")
             time.sleep(0.5)
-            sg_rule = input("Enter the security group name to add rules: \n")
+            sg_rule = input("\nEnter the security group name to add rules: ")
         
         while sg_rule not in dict_variables["security_groups"]:
             print("\033[31mInvalid security group name. Please try again.\033[00m")
-            sg_rule = input("Enter the security group name to add rules: \n")
+            sg_rule = input("\nEnter the security group name to add rules: ")
     
         else:
             os.system("cls")
@@ -340,7 +378,7 @@ def program(decision):
             print("\033[95m" + " "*25 + "ADDING RULES TO SECURITY GROUP " + sg_rule +"\033[0m" + " "*25)
             print("\033[95m" + "-"*80 + "\033[0m")
 
-            new_ingress = input("Do you want to add a new ingress rule? (y/n) \n")
+            new_ingress = input("\nDo you want to add a new ingress rule? (y/n) ")
             while new_ingress != "y" and new_ingress != "n" or new_ingress == "":
                 print("\033[31mInvalid option. Please try again.\033[00m")
                 time.sleep(0.2)
@@ -349,10 +387,30 @@ def program(decision):
 
             if new_ingress == "y":
                 new_security_ingress = input("Ingress description: \n")
+                while new_security_ingress == "":
+                    print("\033[31mNo ingress description entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_ingress = input("Ingress description: \n")
                 new_security_from_port = input("From port: \n")
+                while new_security_from_port == "":
+                    print("\033[31mNo from port entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_from_port = input("From port: \n")
                 new_security_to_port = input("To port: \n")
+                while new_security_to_port == "":
+                    print("\033[31mNo to port entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_to_port = input("To port: \n")
                 new_security_protocol = input("Protocol: \n")
-                new_security_cidr_blocks = input("CIDR blocks: \n") 
+                while new_security_protocol == "":
+                    print("\033[31mNo protocol entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_protocol = input("Protocol: \n")
+                new_security_cidr_blocks = input("CIDR blocks: \n")
+                while new_security_cidr_blocks == "":
+                    print("\033[31mNo CIDR blocks entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_cidr_blocks = input("CIDR blocks: \n")
                 dict_variables["security_groups"][sg_rule]["security_ingress"].append({"rules": {"description": new_security_ingress, 
                     "from_port" : new_security_from_port, "to_port" : new_security_to_port, "protocol" : new_security_protocol, 
                     "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
@@ -373,10 +431,30 @@ def program(decision):
 
             if new_egress == "y":
                 new_security_egress = input("Egress description: \n")
+                while new_security_egress == "":
+                    print("\033[31mNo egress description entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_egress = input("Egress description: \n")
                 new_security_from_port = input("From port: \n")
+                while new_security_from_port == "":
+                    print("\033[31mNo from port entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_from_port = input("From port: \n")
                 new_security_to_port = input("To port: \n")
+                while new_security_to_port == "":
+                    print("\033[31mNo to port entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_to_port = input("To port: \n")
                 new_security_protocol = input("Protocol: \n")
+                while new_security_protocol == "":
+                    print("\033[31mNo protocol entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_protocol = input("Protocol: \n")
                 new_security_cidr_blocks = input("CIDR blocks: \n") 
+                while new_security_cidr_blocks == "":
+                    print("\033[31mNo CIDR blocks entered. Please try again.\033[00m")
+                    time.sleep(0.2)
+                    new_security_cidr_blocks = input("CIDR blocks: \n")
                 dict_variables["security_groups"][sg_rule]["security_egress"].append({"rules": {"description": new_security_egress, 
                     "from_port" : new_security_from_port, "to_port" : new_security_to_port, "protocol" : new_security_protocol, 
                     "ipv6_cidr_blocks": None, "prefix_list_ids": None, "self": None,"security_groups": None, 
@@ -406,12 +484,13 @@ def program(decision):
         print("\033[95m" + "-"*80 + "\033[0m")
         print("\033[95m" + " "*30 + "LIST SECURITY GROUPS\033[0m" + " "*30)
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("Existing security groups in Terraform file: \n")
+        print('ALL SECURITY GROUPS LOCALLY: \n')
+
         for key in dict_variables["security_groups"]:
             print("\033[34mName:\033[00m " + key)
 
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("Existing security groups in AWS: \n")
+        print('ALL SECURITY GROUPS IN AWS: \n')
         time.sleep(0.4)
         groups = []
         sg_ids = []
@@ -429,13 +508,13 @@ def program(decision):
             os.system("cls")
             mycommands()
         
-        list_decision = input("Do you want to list from Terraform file or AWS? (1/2): \n")
+        list_decision = input("Do you want to list locally or from AWS?\n\n\033[1;32m1.\033[00m Locally\n\033[1;32m2.\033[00m AWS\n\n")
 
         while list_decision != "1" and list_decision != "2" or list_decision == "":
             print("\033[31mInvalid option. Please try again.\033[00m")
             time.sleep(0.8)
             os.system("cls")
-            list_decision = input("Do you want to list from Terraform file or AWS? (1/2): \n")
+            list_decision = input("Do you want to list locally or from AWS?\n\n\033[1;32m1.\033[00m Locally\n\033[1;32m2.\033[00m AWS\n\n")
 
         if list_decision == "1":
             while sg not in groups or sg not in sg_ids:
@@ -526,7 +605,7 @@ def program(decision):
         print("\033[95m" + "-"*80 + "\033[0m")
         print("\033[95m" + " "*30 + "DELETE SECURITY GROUP\033[0m" + " "*30)
         print("\033[95m" + "-"*80 + "\033[0m")
-        print("Existing security groups in Terraform file: \n")
+        print('ALL SECURITY GROUPS LOCALLY: \n')
         for key in dict_variables["security_groups"]:
             print("\033[34mName:\033[00m " + key)
         print("\n")
@@ -759,7 +838,6 @@ def program(decision):
         print("\nApplying all changes...\n")
         time.sleep(0.8)
         
-        #check if .terraform.lock.hcl exists
         if os.path.exists(".terraform.lock.hcl"):
             os.system('terraform plan -var-file=secret.tfvars')
             os.system('terraform apply -var-file=secret.tfvars')
