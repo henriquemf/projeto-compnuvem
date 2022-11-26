@@ -25,6 +25,14 @@
 - Associar restrições a usuários :heavy_check_mark:
 - Deletar regras em security groups :heavy_check_mark:
 
+## Conceito A - :writing_hand: Escalabilidade <img src="https://img.shields.io/static/v1?label=ConceitoB&message=Finalizado&color=success&style=flat-square&logo=ghost"/>
+
+- Implementar _High Availability_ :heavy_check_mark:
+- Configurar e criar Load Balancer :heavy_check_mark:
+- Configurar e criar Auto Scaling Group :heavy_check_mark:
+- Criação de 3 sub-redes, uma para cada instância do auto-scaling :heavy_check_mark:
+- Testes na AWS, funcionando apenas na região 2 (Ohio) :heavy_check_mark:
+
 # Tutorial de criação :hammer_and_wrench::
 
 ## Objetivo :bow_and_arrow:
@@ -203,7 +211,22 @@ Agora, é necessário que sejam criados usuários com nome e permissões especí
 
 Para que seja possível o usuário escolher a região na qual vai trabalhar e dar _deploy_ nas funcionalidades desejadas, sem que interfira em outra região, foi necessário utilizar pastas diferentes para cada uma das regiões. Nesse projeto, foi utilizado apenas 2 regiões: us-east-1 (no arquivo `terraform-east-1`) e us-east-2 (no arquivo `terraform-east-2`). Com isso, no Python, ao executar os comandos abaixo para a execução do Terraform e a aplicação na AWS, foi trocado o diretório de trabalho de acordo com a decisão do usuário da região que deseja trabalhar tendo, nessas pastas, todos os arquivos necessários para as funcionalidades.
 
-## Execução
+## High Availability :recycle:
+
+Para o final do projeto, foi implementado a funcionalidade de high availability, permitindo que uma máquina seja criada automaticamente, por meio de um auto-scaling group, sempre que uma máquina criada seja destruída ou atinja um limite de % de uso. Isso foi configurado em um arquivo denominado `autoscaling.tf` e, para acessar o WebServer criado, é possível acessar o link disponível no output após a execução do programa. 
+
+Para uma mais profunda explicação, primeiramente foi criada uma imagem de uma instância personalizada, a qual teve o NodeJS instalado e um `server.js` criado, o qual é responsável por rodar uma página na internet comum, apenas printando uma frase e outras informações. Feito isso, por meio de uma acesso com **SSH** à essa máquina, é aplicado o crontab, o qual ficará responsável por fazer que esse servidor rode sempre que a máquina é iniciada ou reiniciada, sendo possível acessar esse link por meio do que foi disponibilizado no output do terminal. 
+
+Crontab command
+```
+echo ‘@reboot ./server.js’ | crontab
+```
+
+Feito isso, foi gerada uma imagem AMI dessa instância e aplicada como um _launch template_ para o Auto-Scaling group, fazendo com que toda máquina que seja realizada o _deploy_ por meio dele seja igual à anterior, ou seja, com um WebServer rodando, permitindo uma alta escalabilidade e balanceamento de cargas, fazendo com que nenhuma máquina seja usada excessivamente ou perca a funcionalidade principal. 
+
+Essa funcionalidade foi implementada apenas em uma única região, a `us-east-2`. Logo, para que seja possível testar esse recurso, basta acessar a região 2.
+
+## Execução :racing_car:
 
 No programa da interface visual feita em Python, é rodado os seguintes comandos, necessários para a execução do Terraform:
 
