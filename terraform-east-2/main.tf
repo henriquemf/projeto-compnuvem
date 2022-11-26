@@ -26,7 +26,7 @@ resource "aws_vpc" "vpc_east_2" {
 
 resource "aws_subnet" "vpc_east_2_subnet" {
   vpc_id     = aws_vpc.vpc_east_2.id
-  cidr_block = "10.0.1.0/24"
+  cidr_block = "10.0.0.0/24"
 
   tags = {
     Name = "subnet_east_2"

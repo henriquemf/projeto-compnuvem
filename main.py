@@ -8,7 +8,8 @@ import boto3
 contador = 0
 
 os.system('cls')
-path = input("\033[1;32m\n" + "-"*80 + "\n" + " "*30 + "SELECT THE REGION" + " "*30 + "\n" + "-"*80 + "\033[0m" + "\n\n\033[1;32m1.\033[0m us-east-1 (North Virginia)\n\033[1;32m2.\033[0m us-east-2 (Ohio): \n\n")
+path = input("\033[1;32m\n" + "-"*80 + "\n" + " "*30 + "SELECT THE REGION" + " "*30 + "\n" + "-"*80 + 
+"\033[0m" + "\n\n\033[1;32m1.\033[0m us-east-1 (North Virginia)\n\033[1;32m2.\033[0m us-east-2 (Ohio and H.A. avaiable): \n\n")
 os.system("cls")
 
 while path != "1" and path != "2":
